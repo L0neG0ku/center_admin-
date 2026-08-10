@@ -1,0 +1,129 @@
+.signup {
+  display: flex;
+  flex-direction: column;
+}
+
+.signup__count {
+  align-self: flex-start;
+  margin-top: 26px;
+  padding: 6px 14px;
+  border-radius: var(--r-full);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.signup__body {
+  margin-top: 20px;
+}
+
+.signup__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.signup__login {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--ink-500);
+}
+
+.signup__login a {
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+.signup__login a:hover {
+  text-decoration: underline;
+}
+
+/* Trust band beneath the card ----------------------------------- */
+.signup__trust {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.signup__trust-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--r-md);
+  background: var(--brand-50);
+  color: var(--brand-600);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.signup__trust > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.signup__trust strong {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.signup__trust p {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--ink-500);
+}
+
+.signup__trust ul {
+  display: flex;
+  gap: 22px;
+  flex-shrink: 0;
+}
+
+.signup__trust li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-600, var(--ink-500));
+}
+
+.signup__trust li svg {
+  color: var(--brand-500);
+}
+
+@media (max-width: 1023px) {
+  .signup__trust {
+    flex-wrap: wrap;
+  }
+
+  .signup__trust ul {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+}
+
+@media (max-width: 519px) {
+  .signup__foot {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .signup__foot .btn {
+    width: 100%;
+  }
+}

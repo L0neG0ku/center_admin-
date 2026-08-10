@@ -1,0 +1,185 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap");
+
+/* ============================================================
+   Design tokens — Kribble for Daycares (marketing + portal)
+   Same brand palette as Kribble Operations, sized a little
+   larger and rounder for a public-facing site.
+   ============================================================ */
+:root {
+  /* Brand */
+  --brand-50: #f5f0ff;
+  --brand-100: #ede4ff;
+  --brand-200: #ddceff;
+  --brand-300: #c4a9ff;
+  --brand-400: #a78bfa;
+  --brand-500: #8b5cf6;
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9;
+  --brand-800: #5b21b6;
+
+  /* Ink */
+  --ink-900: #17182b;
+  --ink-800: #24263c;
+  --ink-700: #3a3d57;
+  --ink-500: #6b7089;
+  --ink-600: #51566f;
+  --ink-400: #8b90a6;
+  --ink-300: #b3b7c8;
+
+  /* Surfaces */
+  --canvas: #ffffff;
+  --surface: #ffffff;
+  --surface-soft: #faf8ff;
+  --lavender: #f6f2ff;
+  --line: #ece9f5;
+  --line-strong: #e0dcef;
+
+  /* Accents */
+  --success: #16a34a;
+  --success-soft: #e8f7ee;
+  --warning: #f59e0b;
+  --warning-soft: #fef3e2;
+  --danger: #ef4444;
+  --danger-soft: #fdeaea;
+  --info: #3b82f6;
+  --info-soft: #e8f1fe;
+  --pink: #ec4899;
+  --pink-soft: #fdeaf4;
+
+  /* Radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-2xl: 28px;
+  --r-full: 999px;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px rgba(23, 24, 43, 0.04);
+  --shadow-card: 0 2px 4px rgba(76, 45, 145, 0.04), 0 18px 44px rgba(76, 45, 145, 0.06);
+  --shadow-pop: 0 16px 40px rgba(76, 45, 145, 0.16);
+  --shadow-cta: 0 10px 24px rgba(109, 40, 217, 0.28);
+
+  /* Layout */
+  --header-h: 86px;
+  --shell: 1200px;
+
+  /* Type */
+  --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Poppins", var(--font);
+}
+
+/* ============================================================
+   Reset
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink-900);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, p, figure {
+  margin: 0;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+input, select, textarea {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-600);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   Shared helpers
+   ============================================================ */
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 34px;
+}
+
+.accent {
+  color: var(--brand-600);
+}
+
+/* Decorative dot grids used across the marketing pages */
+.dots {
+  position: absolute;
+  background-image: radial-gradient(var(--brand-200) 1.6px, transparent 1.6px);
+  background-size: 15px 15px;
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .shell {
+    padding: 0 20px;
+  }
+}

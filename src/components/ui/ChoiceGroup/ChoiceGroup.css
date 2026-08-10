@@ -1,0 +1,74 @@
+.choice {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+
+.choice__label {
+  padding: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-800);
+}
+
+.choice__label span {
+  color: var(--danger);
+}
+
+.choice__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.choice__options.has-error .choice__option {
+  border-color: var(--danger);
+}
+
+.choice__option {
+  position: relative;
+  padding: 11px 18px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.choice__option:hover {
+  border-color: var(--brand-300);
+}
+
+.choice__option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.choice__option.is-active {
+  border-color: var(--brand-600);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-weight: 600;
+}
+
+.choice__option:focus-within {
+  box-shadow: 0 0 0 4px var(--brand-50);
+}
+
+.choice__error {
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.choice__hint {
+  font-size: 12px;
+  color: var(--ink-400);
+}

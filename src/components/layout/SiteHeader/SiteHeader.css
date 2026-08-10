@@ -1,0 +1,137 @@
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.site-header__inner {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  gap: 34px;
+}
+
+.site-header__brand img {
+  width: 58px;
+  height: 58px;
+  border-radius: 17px;
+}
+
+/* Nav ---------------------------------------------------------- */
+.site-header__nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.site-header__nav ul {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.site-header__nav a {
+  position: relative;
+  display: block;
+  padding: 9px 16px;
+  border-radius: var(--r-sm);
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--ink-500);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.site-header__nav a:hover {
+  color: var(--brand-700);
+  background: var(--brand-50);
+}
+
+.site-header__nav a.is-active {
+  color: var(--brand-600);
+  font-weight: 600;
+}
+
+.site-header__nav a.is-active::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand-600);
+}
+
+.site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.site-header__mobile-actions {
+  display: none;
+}
+
+.site-header__toggle {
+  display: none;
+  color: var(--ink-700);
+  padding: 8px;
+  border-radius: var(--r-sm);
+}
+
+.site-header__toggle:hover {
+  background: var(--surface-soft);
+}
+
+/* Responsive --------------------------------------------------- */
+@media (max-width: 1023px) {
+  .site-header__actions {
+    display: none;
+  }
+
+  .site-header__toggle {
+    display: block;
+    margin-left: auto;
+  }
+
+  .site-header__nav {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--header-h);
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px 24px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-card);
+  }
+
+  .site-header__nav.is-open {
+    display: flex;
+  }
+
+  .site-header__nav ul {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .site-header__nav a {
+    padding: 11px 12px;
+  }
+
+  .site-header__nav a.is-active::after {
+    display: none;
+  }
+
+  .site-header__mobile-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+}

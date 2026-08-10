@@ -1,0 +1,111 @@
+.field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-800);
+}
+
+.field__label span {
+  color: var(--danger);
+}
+
+.field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field__control.is-textarea {
+  align-items: flex-start;
+  padding-top: 12px;
+}
+
+.field__control:focus-within {
+  border-color: var(--brand-400);
+  box-shadow: 0 0 0 4px var(--brand-50);
+}
+
+.field__control.has-error {
+  border-color: var(--danger);
+}
+
+.field__control.has-error:focus-within {
+  box-shadow: 0 0 0 4px var(--danger-soft);
+}
+
+.field__icon {
+  color: var(--ink-400);
+  flex-shrink: 0;
+}
+
+.field__control input,
+.field__control select,
+.field__control textarea {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  padding: 13px 0;
+  font-size: 14px;
+  color: var(--ink-900);
+}
+
+.field__control textarea {
+  resize: vertical;
+  line-height: 1.55;
+  padding-top: 0;
+  padding-bottom: 12px;
+}
+
+.field__control select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 24px;
+}
+
+.field__control input::placeholder,
+.field__control textarea::placeholder {
+  color: var(--ink-300);
+}
+
+.field__chevron {
+  position: absolute;
+  right: 13px;
+  color: var(--ink-400);
+  pointer-events: none;
+}
+
+.field__error {
+  font-size: 12px;
+  color: var(--danger);
+}
+
+.field__peek {
+  color: var(--ink-400);
+  display: grid;
+  place-items: center;
+  padding: 3px;
+  border-radius: var(--r-sm);
+  flex-shrink: 0;
+}
+
+.field__peek:hover {
+  color: var(--brand-600);
+}
+
+.field__hint {
+  font-size: 12px;
+  color: var(--ink-400);
+}

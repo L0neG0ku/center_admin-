@@ -1,0 +1,37 @@
+.demo-aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.demo-aside img {
+  width: min(100%, 420px);
+  margin: 0 auto;
+}
+
+.demo-aside__title {
+  margin-top: 22px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+.demo-aside__list {
+  margin-top: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.demo-aside__list li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 14.5px;
+  color: var(--ink-700);
+}
+
+.demo-aside__list svg {
+  color: var(--brand-500);
+  flex-shrink: 0;
+}

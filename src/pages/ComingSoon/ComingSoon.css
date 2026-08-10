@@ -1,0 +1,33 @@
+.soon {
+  padding: 90px 0 120px;
+  background: linear-gradient(180deg, #faf8ff 0%, #ffffff 60%);
+}
+
+.soon__inner {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.soon__icon {
+  width: 62px;
+  height: 62px;
+  border-radius: var(--r-full);
+  background: var(--brand-50);
+  color: var(--brand-600);
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+}
+
+.soon h1 {
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.soon p {
+  font-size: 15px;
+  color: var(--ink-500);
+  margin-bottom: 8px;
+}

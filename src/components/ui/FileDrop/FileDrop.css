@@ -1,0 +1,97 @@
+.filedrop {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 24px 18px;
+  border: 1.5px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface-soft);
+  color: var(--ink-400);
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.filedrop.is-dragging {
+  border-color: var(--brand-500);
+  background: var(--brand-50);
+}
+
+.filedrop.has-error {
+  border-color: var(--danger);
+}
+
+.filedrop > svg {
+  color: var(--brand-500);
+}
+
+.filedrop p {
+  font-size: 13.5px;
+  color: var(--ink-500);
+}
+
+.filedrop p button {
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+.filedrop p button:hover {
+  text-decoration: underline;
+}
+
+.filedrop small {
+  font-size: 12px;
+  color: var(--ink-400);
+}
+
+/* Filled state -------------------------------------------------- */
+.filedrop--filled {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  justify-items: stretch;
+  gap: 12px;
+  padding: 14px 16px;
+  border-style: solid;
+  border-color: var(--brand-200);
+  background: var(--brand-50);
+  text-align: left;
+}
+
+.filedrop__badge {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--brand-600);
+  display: grid;
+  place-items: center;
+}
+
+.filedrop__meta {
+  display: grid;
+  min-width: 0;
+}
+
+.filedrop__meta strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filedrop__meta small {
+  font-size: 12px;
+  color: var(--ink-500);
+}
+
+.filedrop__remove {
+  color: var(--ink-400);
+  padding: 7px;
+  border-radius: var(--r-sm);
+}
+
+.filedrop__remove:hover {
+  background: var(--surface);
+  color: var(--danger);
+}

@@ -1,0 +1,139 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding: 96px 0 80px;
+  background:
+    radial-gradient(760px 480px at 78% 14%, #f1eaff 0%, rgba(241, 234, 255, 0) 62%),
+    linear-gradient(180deg, #fbfaff 0%, #ffffff 100%);
+}
+
+.hero__dots {
+  left: 6%;
+  top: 46%;
+  width: 92px;
+  height: 62px;
+}
+
+.hero__inner {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  gap: 64px;
+  align-items: center;
+}
+
+.hero__copy {
+  min-width: 0;
+}
+
+.hero__title {
+  margin-top: 32px;
+  font-size: clamp(40px, 5.2vw, 64px);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+}
+
+.hero__tagline {
+  margin-top: 24px;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 22px);
+  font-weight: 500;
+  color: var(--ink-700);
+}
+
+.hero__body {
+  margin-top: 18px;
+  max-width: 450px;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: var(--ink-500);
+}
+
+.hero__actions {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* Art ---------------------------------------------------------- */
+.hero__art {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.hero__art::before {
+  content: "";
+  position: absolute;
+  inset: -8% -6% -4% -6%;
+  border-radius: 46% 54% 52% 48% / 56% 44% 56% 44%;
+  background: linear-gradient(150deg, #f3edff 0%, #faf7ff 70%);
+  z-index: 0;
+}
+
+.hero__art img {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 560px);
+  animation: hero-float 5.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Gentle vertical drift, so the illustration feels alive without being busy */
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__art img {
+    animation: none;
+  }
+}
+
+/* Responsive --------------------------------------------------- */
+@media (max-width: 1023px) {
+  .hero {
+    padding: 60px 0 48px;
+  }
+
+  .hero__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 36px;
+    text-align: center;
+  }
+
+  .hero__body {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero__actions {
+    justify-content: center;
+  }
+
+  .hero__dots {
+    display: none;
+  }
+
+  .hero__art {
+    order: -1;
+  }
+
+  .hero__art img {
+    width: min(100%, 420px);
+  }
+}
+
+@media (max-width: 519px) {
+  .hero__actions .btn {
+    width: 100%;
+  }
+}
