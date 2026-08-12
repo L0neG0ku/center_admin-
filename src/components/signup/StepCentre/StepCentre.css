@@ -105,6 +105,31 @@
   margin-top: 27px;
 }
 
+/* Revealed "Other" text field under a chip group */
+.centre__other {
+  margin-top: 14px;
+}
+
+/* The 1:[ ] custom-ratio input */
+.centre__ratio-other {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+  max-width: 220px;
+}
+
+.centre__ratio-prefix {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink-700);
+  line-height: 44px;
+}
+
+.centre__ratio-other .field {
+  flex: 1;
+}
+
 @media (max-width: 639px) {
   .centre__otp {
     grid-template-columns: minmax(0, 1fr);

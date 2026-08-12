@@ -47,6 +47,14 @@ const blank = {
   preschoolSlots: "",
   ageGroups: [],
   capacity: "",
+  curriculum: [],
+  curriculumOther: "",
+  languages: [],
+  languageOther: "",
+  preschoolRatio: "",
+  preschoolRatioOther: "",
+  daycareRatio: "",
+  daycareRatioOther: "",
   meals: "",
   cctv: "",
   feeFullDay: "",
@@ -184,6 +192,7 @@ export default function Signup() {
   const validateStep = (index) => {
     const next = {};
     const hasPreschool = values.centreType === "Preschool" || values.centreType === "Both";
+    const hasDaycare = values.centreType === "Daycare" || values.centreType === "Both";
 
     if (index === 0) {
       if (!values.legalName.trim()) next.legalName = "Required.";
@@ -199,6 +208,28 @@ export default function Signup() {
       if (hasPreschool && !values.preschoolSlots) next.preschoolSlots = "Pick one.";
       if (values.ageGroups.length === 0) next.ageGroups = "Pick at least one.";
       if (!values.capacity || Number(values.capacity) < 1) next.capacity = "Enter your total seats.";
+
+      // Curriculum & Approach
+      if (hasPreschool && values.curriculum.length === 0)
+        next.curriculum = "Pick at least one.";
+      if (values.curriculum.includes("Other") && !values.curriculumOther.trim())
+        next.curriculumOther = "Tell us about your curriculum.";
+      if (values.languages.length === 0) next.languages = "Pick at least one.";
+      if (values.languages.includes("Others") && !values.languageOther.trim())
+        next.languageOther = "Name the language.";
+      if (
+        hasPreschool &&
+        values.preschoolRatio === "Other" &&
+        !String(values.preschoolRatioOther).trim()
+      )
+        next.preschoolRatioOther = "Enter the ratio.";
+      if (
+        hasDaycare &&
+        values.daycareRatio === "Other" &&
+        !String(values.daycareRatioOther).trim()
+      )
+        next.daycareRatioOther = "Enter the ratio.";
+
       if (!values.meals) next.meals = "Pick one.";
       if (!values.cctv) next.cctv = "Pick one.";
       if (!values.ownership) next.ownership = "Pick one.";

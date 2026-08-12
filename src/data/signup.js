@@ -37,6 +37,29 @@ export const ownershipTypes = ["Independent", "Franchise"];
 export const yesNo = ["Yes", "No"];
 export const preschoolSlotOptions = ["1 shift", "2 shifts"];
 
+/** Preschool / Both — teaching approach. Multi-select; "Other" reveals a text box. */
+export const curriculumOptions = [
+  "Play-based / Play-way",
+  "Montessori",
+  "Theme-based / Multiple Intelligence",
+  "Traditional / Academic (reading, writing, numbers)",
+  "NEP 2020 / Foundational Stage aligned",
+  "Reggio Emilia",
+  "Waldorf / Steiner",
+  "HighScope",
+  "Our own / Proprietary curriculum",
+  "Other",
+];
+
+/** Multi-select; "Others" reveals a text box to name the language. */
+export const primaryLanguages = ["English", "Hindi", "Others"];
+
+/** Preschool teacher-to-child ratios. "Other" reveals a 1:[ ] input. */
+export const preschoolRatios = ["1:8", "1:10", "1:12", "1:15", "1:20", "Other"];
+
+/** Daycare caregiver-to-child ratios. "Other" reveals a 1:[ ] input. */
+export const daycareRatios = ["1:1", "1:2", "1:4", "1:6", "1:8", "Other"];
+
 export const ageGroups = [
   "Infants (0-1 yr)",
   "Toddlers (1-2 yrs)",

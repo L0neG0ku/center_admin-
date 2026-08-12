@@ -76,6 +76,49 @@ export default function StepReview({ values, onEdit }) {
 
         <section className="review__block">
           <header>
+            <h4>Curriculum &amp; Approach</h4>
+            <button type="button" onClick={() => onEdit(0)}>
+              Edit
+            </button>
+          </header>
+          <Row
+            label="Curriculum"
+            value={values.curriculum
+              .map((item) => (item === "Other" ? values.curriculumOther : item))
+              .filter(Boolean)
+              .join(", ")}
+          />
+          <Row
+            label="Language"
+            value={values.languages
+              .map((item) => (item === "Others" ? values.languageOther : item))
+              .filter(Boolean)
+              .join(", ")}
+          />
+          <Row
+            label="Preschool ratio"
+            value={
+              values.preschoolRatio === "Other"
+                ? values.preschoolRatioOther
+                  ? `1:${values.preschoolRatioOther}`
+                  : ""
+                : values.preschoolRatio
+            }
+          />
+          <Row
+            label="Daycare ratio"
+            value={
+              values.daycareRatio === "Other"
+                ? values.daycareRatioOther
+                  ? `1:${values.daycareRatioOther}`
+                  : ""
+                : values.daycareRatio
+            }
+          />
+        </section>
+
+        <section className="review__block">
+          <header>
             <h4>Fees</h4>
             <button type="button" onClick={() => onEdit(0)}>
               Edit

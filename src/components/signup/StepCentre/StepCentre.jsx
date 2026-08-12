@@ -6,9 +6,13 @@ import FormSection from "../FormSection/FormSection.jsx";
 import {
   ageGroups,
   centreTypes,
+  curriculumOptions,
+  daycareRatios,
   indianStates,
   ownershipTypes,
+  preschoolRatios,
   preschoolSlotOptions,
+  primaryLanguages,
   weekdays,
   yesNo,
 } from "../../../data/signup.js";
@@ -16,6 +20,7 @@ import "./StepCentre.css";
 
 export default function StepCentre({ values, errors, set, toggleIn, otp, onOtp }) {
   const hasPreschool = values.centreType === "Preschool" || values.centreType === "Both";
+  const hasDaycare = values.centreType === "Daycare" || values.centreType === "Both";
 
   return (
     <>
@@ -291,6 +296,147 @@ export default function StepCentre({ values, errors, set, toggleIn, otp, onOtp }
           error={errors.capacity}
         />
       </FormSection>
+
+      {values.centreType ? (
+        <FormSection
+          title="Curriculum & Approach"
+          description="How you teach and care — this helps parents find the right fit."
+        >
+          {hasPreschool ? (
+            <div className="is-wide">
+              <span className="centre__label">
+                Curriculum Followed<span aria-hidden="true"> *</span>
+              </span>
+              <div className={`centre__chips ${errors.curriculum ? "has-error" : ""}`.trim()}>
+                {curriculumOptions.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    className={values.curriculum.includes(option) ? "is-on" : ""}
+                    onClick={() => toggleIn("curriculum", option)}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+              {errors.curriculum ? (
+                <span className="centre__error" role="alert">
+                  {errors.curriculum}
+                </span>
+              ) : null}
+
+              {values.curriculum.includes("Other") ? (
+                <div className="centre__other">
+                  <Field
+                    id="curriculumOther"
+                    label="Tell us about your curriculum"
+                    required
+                    placeholder="Describe your approach"
+                    value={values.curriculumOther}
+                    onChange={set("curriculumOther")}
+                    error={errors.curriculumOther}
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="is-wide">
+            <span className="centre__label">
+              Primary Language Used<span aria-hidden="true"> *</span>
+            </span>
+            <div className={`centre__chips ${errors.languages ? "has-error" : ""}`.trim()}>
+              {primaryLanguages.map((language) => (
+                <button
+                  key={language}
+                  type="button"
+                  className={values.languages.includes(language) ? "is-on" : ""}
+                  onClick={() => toggleIn("languages", language)}
+                >
+                  {language}
+                </button>
+              ))}
+            </div>
+            {errors.languages ? (
+              <span className="centre__error" role="alert">
+                {errors.languages}
+              </span>
+            ) : null}
+
+            {values.languages.includes("Others") ? (
+              <div className="centre__other">
+                <Field
+                  id="languageOther"
+                  label="Which language?"
+                  required
+                  placeholder="e.g. Kannada, Tamil, Marathi"
+                  value={values.languageOther}
+                  onChange={set("languageOther")}
+                  error={errors.languageOther}
+                />
+              </div>
+            ) : null}
+          </div>
+
+          {hasPreschool ? (
+            <div className="is-wide">
+              <ChoiceGroup
+                label="Teacher-to-Child Ratio — Preschool"
+                name="preschoolRatio"
+                options={preschoolRatios}
+                value={values.preschoolRatio}
+                onChange={set("preschoolRatio")}
+                error={errors.preschoolRatio}
+                hint="Optional — you can confirm this on our call."
+              />
+              {values.preschoolRatio === "Other" ? (
+                <div className="centre__ratio-other">
+                  <span className="centre__ratio-prefix">1:</span>
+                  <Field
+                    id="preschoolRatioOther"
+                    label=""
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 18"
+                    value={values.preschoolRatioOther}
+                    onChange={set("preschoolRatioOther")}
+                    error={errors.preschoolRatioOther}
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
+          {hasDaycare ? (
+            <div className="is-wide">
+              <ChoiceGroup
+                label="Caregiver-to-Child Ratio — Daycare"
+                name="daycareRatio"
+                options={daycareRatios}
+                value={values.daycareRatio}
+                onChange={set("daycareRatio")}
+                error={errors.daycareRatio}
+                hint="Optional — you can confirm this on our call."
+              />
+              {values.daycareRatio === "Other" ? (
+                <div className="centre__ratio-other">
+                  <span className="centre__ratio-prefix">1:</span>
+                  <Field
+                    id="daycareRatioOther"
+                    label=""
+                    type="number"
+                    min="1"
+                    placeholder="e.g. 3"
+                    value={values.daycareRatioOther}
+                    onChange={set("daycareRatioOther")}
+                    error={errors.daycareRatioOther}
+                  />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </FormSection>
+      ) : null}
 
       <FormSection title="Facilities" description="A couple of quick yes-or-no questions.">
         <ChoiceGroup
