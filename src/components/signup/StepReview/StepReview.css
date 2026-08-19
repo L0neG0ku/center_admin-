@@ -66,3 +66,29 @@
     gap: 2px;
   }
 }
+
+/* Server-side checklist of what's still outstanding. */
+.review__missing {
+  padding: 14px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--warn-200, #f4d9a8);
+  background: var(--warn-50, #fff8ec);
+}
+
+.review__missing strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13.5px;
+  color: var(--ink-900);
+}
+
+.review__missing ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.review__missing li {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-700);
+}

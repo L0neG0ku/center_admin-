@@ -1,0 +1,179 @@
+.status {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+
+.status--centered {
+  justify-items: center;
+  text-align: center;
+}
+
+.status__title {
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.3;
+  color: var(--ink-900);
+}
+
+.status__sub {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-500);
+}
+
+/* Status markers ------------------------------------------------- */
+.status__badge,
+.status__warn,
+.status__clock {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+}
+
+.status__badge {
+  background: var(--ok-50, #e8f8ef);
+  color: var(--ok-600, #1a9b56);
+}
+
+.status__warn {
+  background: var(--warn-50, #fff4e5);
+  color: var(--warn-600, #b56a00);
+}
+
+.status__clock {
+  background: var(--brand-50, #f1edff);
+  color: var(--brand-700);
+}
+
+/* Approved: what they just unlocked ------------------------------ */
+.status__wins {
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  text-align: left;
+}
+
+.status__wins li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  color: var(--ink-700, #3b4252);
+}
+
+.status__wins svg {
+  color: var(--ok-600, #1a9b56);
+  flex: none;
+}
+
+/* Queue: the four verification stages ---------------------------- */
+.status__stages {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+  width: 100%;
+}
+
+.status__stages li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 11px;
+  align-items: start;
+  padding: 13px 14px;
+  border: 1px solid var(--line-200, #e6e8ef);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.status__stages li.is-done {
+  border-color: var(--ok-200, #b9e6cd);
+  background: var(--ok-50, #f3fbf6);
+}
+
+.status__stages svg {
+  margin-top: 2px;
+  color: var(--ink-400, #9aa1ad);
+  flex: none;
+}
+
+.status__stages li.is-done svg {
+  color: var(--ok-600, #1a9b56);
+}
+
+.status__stages strong {
+  display: block;
+  font-size: 14px;
+  color: var(--ink-900);
+}
+
+.status__stages span {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-500);
+}
+
+/* Changes requested ---------------------------------------------- */
+.status__note {
+  margin: 0;
+  padding: 13px 15px;
+  border-radius: 10px;
+  background: var(--warn-50, #fff4e5);
+  border: 1px solid var(--warn-200, #ffdfae);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-800, #2b3340);
+}
+
+.status__docs {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 7px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-700, #3b4252);
+}
+
+.status__eta,
+.status__foot {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-500);
+}
+
+.status__foot a {
+  color: var(--brand-700);
+  font-weight: 600;
+}
+
+.status__spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2.5px solid var(--line-200, #e6e8ef);
+  border-top-color: var(--brand-700);
+  animation: status-spin 0.7s linear infinite;
+}
+
+@keyframes status-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status__spinner {
+    animation-duration: 2s;
+  }
+}

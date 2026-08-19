@@ -95,3 +95,21 @@
   background: var(--surface);
   color: var(--danger);
 }
+
+/* Upload progress, shown while a presigned PUT is in flight. */
+.filedrop__bar {
+  display: block;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.filedrop__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand-600);
+  transition: width 0.2s ease;
+}

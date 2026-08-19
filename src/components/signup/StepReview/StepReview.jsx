@@ -11,7 +11,7 @@ function Row({ label, value }) {
   );
 }
 
-export default function StepReview({ values, onEdit }) {
+export default function StepReview({ values, onEdit, check }) {
   const documents = documentsFor(values).filter((doc) => !doc.disabled);
   const uploaded = documents.filter((doc) => values.files[doc.id]).length;
   const photoCount = Object.values(values.photos).reduce((sum, list) => sum + list.length, 0);
@@ -21,6 +21,19 @@ export default function StepReview({ values, onEdit }) {
       title="Review"
       description="A quick check before you sign. Jump back to any step to change something."
     >
+      {check && !check.ready && check.missing.length ? (
+        <div className="is-wide review__missing" role="status">
+          <strong>Still needed before you can submit</strong>
+          <ul>
+            {check.missing.map((item, index) => (
+              <li key={item.field ?? item.label ?? index}>
+                {typeof item === "string" ? item : item.label || item.field}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <div className="is-wide review__grid">
         <section className="review__block">
           <header>
@@ -126,6 +139,12 @@ export default function StepReview({ values, onEdit }) {
           </header>
           <Row label="Full-day" value={values.feeFullDay ? `₹${values.feeFullDay} / month` : ""} />
           <Row label="Half-day" value={values.feeHalfDay ? `₹${values.feeHalfDay} / month` : ""} />
+          {values.feePreschoolTuition ? (
+            <Row
+              label="Preschool tuition"
+              value={`₹${values.feePreschoolTuition} / month`}
+            />
+          ) : null}
           {values.feeAdmission ? <Row label="Admission" value={`₹${values.feeAdmission}`} /> : null}
         </section>
 

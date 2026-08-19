@@ -18,7 +18,15 @@ import {
 } from "../../../data/signup.js";
 import "./StepCentre.css";
 
-export default function StepCentre({ values, errors, set, toggleIn, otp, onOtp }) {
+export default function StepCentre({
+  values,
+  errors,
+  set,
+  toggleIn,
+  otp,
+  onOtp,
+  verificationRequired = true,
+}) {
   const hasPreschool = values.centreType === "Preschool" || values.centreType === "Both";
   const hasDaycare = values.centreType === "Daycare" || values.centreType === "Both";
 
@@ -165,7 +173,13 @@ export default function StepCentre({ values, errors, set, toggleIn, otp, onOtp }
               onOtp.reset();
             }}
             error={errors.phone}
-            hint={values.phoneVerified ? undefined : "We'll send a one-time code to confirm this number."}
+            hint={
+              values.phoneVerified
+                ? undefined
+                : verificationRequired
+                  ? "We'll send a one-time code to confirm this number."
+                  : "Optional for now — you can verify this number with a code, or carry on."
+            }
             suffix={
               values.phoneVerified ? (
                 <span className="centre__verified">
@@ -190,7 +204,11 @@ export default function StepCentre({ values, errors, set, toggleIn, otp, onOtp }
                 value={otp.code}
                 onChange={onOtp.setCode}
                 error={otp.error}
-                hint="No SMS yet — any six digits will do for now."
+                hint={
+                  otp.prefilled
+                    ? "Test code filled in for you — edit it if you want."
+                    : "Enter the code we texted you."
+                }
               />
               <Button variant="outline" onClick={onOtp.verify}>
                 Verify
@@ -485,16 +503,28 @@ export default function StepCentre({ values, errors, set, toggleIn, otp, onOtp }
           onChange={set("feeHalfDay")}
         />
         {hasPreschool ? (
-          <Field
-            id="feeAdmission"
-            label="Preschool admission (one-time)"
-            type="number"
-            icon="rupee"
-            min="0"
-            placeholder="e.g. 20000"
-            value={values.feeAdmission}
-            onChange={set("feeAdmission")}
-          />
+          <>
+            <Field
+              id="feePreschoolTuition"
+              label="Preschool tuition (per month)"
+              type="number"
+              icon="rupee"
+              min="0"
+              placeholder="e.g. 8000"
+              value={values.feePreschoolTuition}
+              onChange={set("feePreschoolTuition")}
+            />
+            <Field
+              id="feeAdmission"
+              label="Preschool admission (one-time)"
+              type="number"
+              icon="rupee"
+              min="0"
+              placeholder="e.g. 20000"
+              value={values.feeAdmission}
+              onChange={set("feeAdmission")}
+            />
+          </>
         ) : null}
       </FormSection>
 

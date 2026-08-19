@@ -127,3 +127,54 @@
     width: 100%;
   }
 }
+
+/* Submit / autosave failures. */
+.signup__error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 11px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--danger);
+  background: #fff5f5;
+  color: var(--danger);
+  font-size: 13.5px;
+}
+
+/* "We restored your draft" bar, with a way to clear it. */
+.signup__restored {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2, #f7f6fb);
+  color: var(--ink-700);
+  font-size: 13.5px;
+}
+
+.signup__restored span {
+  flex: 1;
+  min-width: 180px;
+}
+
+.signup__restored button {
+  border: 1px solid var(--brand-600);
+  background: none;
+  color: var(--brand-700);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.signup__restored button:hover {
+  background: var(--brand-600);
+  color: #fff;
+}

@@ -82,3 +82,22 @@ export const nextWeekLabel = dayOffset(7).toLocaleDateString("en-IN", {
   day: "numeric",
   month: "short",
 });
+
+/**
+ * Wallet summary in the topbar. Placeholder figures until the billing
+ * endpoints exist — the shape mirrors what a settlements API would return.
+ */
+export const walletSummary = {
+  balance: 248500,
+  currency: "₹",
+  pending: 108500,
+  pendingCount: 9,
+  lastPayout: { amount: 92000, at: "12 Aug" },
+  nextPayout: "18 Aug",
+};
+
+/** Formats paise-free rupee amounts the way Indian users expect. */
+export const formatRupees = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits: 0,
+  }).format(Number(value) || 0);

@@ -9,8 +9,8 @@ const formatSize = (bytes) => {
 };
 
 /**
- * Click-or-drag upload control. There's no backend yet, so the file is held
- * in memory — swap `onSelect` for the upload call when the API exists.
+ * Click-or-drag upload control. `onSelect` hands the file to the caller, which
+ * starts the presigned upload and feeds progress back in via `progress`.
  */
 export default function FileDrop({
   id,
@@ -20,6 +20,7 @@ export default function FileDrop({
   accept = ".pdf,.jpg,.jpeg,.png",
   hint = "PDF, JPG or PNG (max 5MB)",
   error,
+  progress,
 }) {
   const inputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -30,14 +31,23 @@ export default function FileDrop({
   };
 
   if (file) {
+    const uploading = typeof progress === "number" && progress < 1;
+
     return (
       <div className={`filedrop filedrop--filled ${error ? "has-error" : ""}`.trim()}>
         <span className="filedrop__badge">
-          <Icon name="fileCheck" size={18} />
+          <Icon name={uploading ? "cloudUpload" : "fileCheck"} size={18} />
         </span>
         <span className="filedrop__meta">
           <strong>{file.name}</strong>
-          <small>{formatSize(file.size)}</small>
+          <small>
+            {uploading ? `Uploading… ${Math.round(progress * 100)}%` : formatSize(file.size)}
+          </small>
+          {uploading ? (
+            <span className="filedrop__bar" aria-hidden="true">
+              <span style={{ width: `${Math.round(progress * 100)}%` }} />
+            </span>
+          ) : null}
         </span>
         <button type="button" className="filedrop__remove" onClick={onRemove} aria-label={`Remove ${file.name}`}>
           <Icon name="trash" size={16} />

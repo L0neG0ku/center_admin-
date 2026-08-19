@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import Icon from "../../../icons/Icon.jsx";
-import logo from "../../../assets/logo.png";
+import logo from "../../../assets/logo-purple.png";
 import art from "../../../assets/hero-illustration.png";
 import "./BrandPanel.css";
 

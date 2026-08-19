@@ -2,18 +2,15 @@ import { Link, NavLink } from "react-router-dom";
 import Icon from "../../icons/Icon.jsx";
 import { Avatar } from "./ui.jsx";
 import { navGroups } from "./nav.js";
-import logo from "../../assets/logo.png";
+import logo from "../../assets/logo-purple.png";
 
 export default function Sidebar({ mini, onToggleMini, onNavigate, user }) {
   return (
     <aside className="dside">
       <Link to="/dashboard" className="dside__brand" aria-label="Kribble dashboard">
+        {/* The logo already reads "kribble", so no wordmark beside it. */}
         <span className="dside__mark">
-          <img src={logo} alt="" />
-        </span>
-        <span className="dside__words">
-          <strong>Kribble</strong>
-          <span>For Daycares</span>
+          <img src={logo} alt="Kribble" />
         </span>
       </Link>
 

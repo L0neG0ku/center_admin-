@@ -126,8 +126,8 @@ export default function Overview() {
   return (
     <>
       <PageHead
-        title={`${greetingFor()}, ${user.name.split(" ")[0]}! 👋`}
-        sub={`Here's what's happening at ${user.centre} today.`}
+        title={`${greetingFor()}, ${String(user?.name ?? "").split(" ")[0] || "there"}! 👋`}
+        sub={`Here's what's happening at ${user?.centre || "your centre"} today.`}
       >
         <span className="dchip">
           <Icon name="calendar" size={16} />

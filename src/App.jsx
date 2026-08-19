@@ -4,6 +4,8 @@ import Home from "./pages/Home/Home.jsx";
 import Demo from "./pages/Demo/Demo.jsx";
 import Signup from "./pages/Signup/Signup.jsx";
 import Login from "./pages/Login/Login.jsx";
+import Activate from "./pages/Activate/Activate.jsx";
+import Status from "./pages/Status/Status.jsx";
 import ComingSoon from "./pages/ComingSoon/ComingSoon.jsx";
 import { RequireAuth } from "./auth/AuthContext.jsx";
 import DashLayout from "./components/dash/DashLayout.jsx";
@@ -33,6 +35,18 @@ export default function App() {
     <Routes>
       <Route path="/signup" element={<Signup />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/activate" element={<Activate />} />
+
+      {/* Where an owner lands after signing in: verified, in the queue, or
+          asked for changes. Gated so a signed-out visitor cannot see it. */}
+      <Route
+        path="/status"
+        element={
+          <RequireAuth>
+            <Status />
+          </RequireAuth>
+        }
+      />
 
       {/* Daycare dashboard — you land here after logging in. */}
       <Route

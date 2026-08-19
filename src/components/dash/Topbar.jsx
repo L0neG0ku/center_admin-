@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import Icon from "../../icons/Icon.jsx";
 import { Avatar } from "./ui.jsx";
 import { quickActions } from "./nav.js";
-import { notifications } from "../../data/dash/overview.js";
+import {
+  formatRupees,
+  notifications,
+  walletSummary,
+} from "../../data/dash/overview.js";
 
 /** Closes a dropdown when you click anywhere else. */
 function useOutside(onClose) {
@@ -61,6 +65,79 @@ export default function Topbar({ onBurger, user, onSignOut }) {
       </div>
 
       <div className="dtop__right">
+        <div className="dtop__wrap">
+          <button
+            type="button"
+            className="dtop__wallet"
+            onClick={() => toggle("wallet")}
+            aria-label={`Wallet balance ${walletSummary.currency}${formatRupees(
+              walletSummary.balance
+            )}`}
+          >
+            <span className="dtop__wallet-icon">
+              <Icon name="wallet" size={16} />
+            </span>
+            <span className="dtop__wallet-text">
+              <small>Wallet</small>
+              <strong>
+                {walletSummary.currency}
+                {formatRupees(walletSummary.balance)}
+              </strong>
+            </span>
+            <Icon name="chevronDown" size={14} className="muted" />
+          </button>
+
+          <Dropdown open={menu === "wallet"} onClose={close}>
+            <div className="dmenu__head">
+              <strong>Wallet</strong>
+            </div>
+
+            <div className="dwallet">
+              <p className="dwallet__label">Available balance</p>
+              <p className="dwallet__balance">
+                {walletSummary.currency}
+                {formatRupees(walletSummary.balance)}
+              </p>
+
+              <div className="dwallet__rows">
+                <div>
+                  <span>Pending from parents</span>
+                  <strong>
+                    {walletSummary.currency}
+                    {formatRupees(walletSummary.pending)}
+                    <small> · {walletSummary.pendingCount} fees</small>
+                  </strong>
+                </div>
+                <div>
+                  <span>Last payout</span>
+                  <strong>
+                    {walletSummary.currency}
+                    {formatRupees(walletSummary.lastPayout.amount)}
+                    <small> · {walletSummary.lastPayout.at}</small>
+                  </strong>
+                </div>
+                <div>
+                  <span>Next payout</span>
+                  <strong>{walletSummary.nextPayout}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="dmenu__split" />
+            <button
+              type="button"
+              className="dmenu__item"
+              onClick={() => go("/dashboard/billing")}
+            >
+              <Icon name="receipt" size={18} />
+              <span>
+                Go to billing
+                <small>Invoices, payouts and fee reminders</small>
+              </span>
+            </button>
+          </Dropdown>
+        </div>
+
         <div className="dtop__wrap">
           <button type="button" className="dtop__quick" onClick={() => toggle("quick")}>
             <Icon name="zap" size={16} />

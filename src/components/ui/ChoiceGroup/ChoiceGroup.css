@@ -5,6 +5,10 @@
   min-width: 0;
   display: grid;
   gap: 7px;
+  /* Side-by-side groups are stretched to equal height by the section grid.
+     Without this, a group with no hint line hands its spare height to the
+     options row and the buttons grow taller than the neighbouring group's. */
+  align-content: start;
 }
 
 .choice__label {
@@ -21,6 +25,7 @@
 .choice__options {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 8px;
 }
 

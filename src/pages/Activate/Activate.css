@@ -1,0 +1,134 @@
+.activate {
+  display: flex;
+  flex-direction: column;
+}
+
+.activate--centered {
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  padding: 20px 0;
+}
+
+.activate__title {
+  font-size: 27px;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.activate__sub {
+  margin-top: 6px;
+  font-size: 14.5px;
+  color: var(--ink-500);
+  max-width: 42ch;
+}
+
+.activate--centered .activate__sub {
+  margin-inline: auto;
+}
+
+.activate__fields {
+  display: grid;
+  gap: 16px;
+  margin-top: 26px;
+}
+
+/* Password rules ------------------------------------------------ */
+.activate__rules {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  display: grid;
+  gap: 8px;
+  border-radius: var(--r-md);
+  background: var(--surface-2, #f7f6fb);
+}
+
+.activate__rules li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-500);
+  transition: color 0.2s ease;
+}
+
+.activate__rules li.is-met {
+  color: var(--brand-700);
+}
+
+.activate__submit {
+  margin-top: 22px;
+}
+
+/* Status ------------------------------------------------------- */
+.activate__warn {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #fff4f4;
+  color: var(--danger);
+}
+
+.activate__error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  font-size: 13.5px;
+  color: var(--danger);
+}
+
+.activate__ok {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  color: var(--brand-700);
+}
+
+/* Request-a-new-link form, shown when the token is expired or spent.
+   A used token cannot be traced back to an account, so the owner has to
+   tell us which email to send to. */
+.activate__resend {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 340px;
+  margin-top: 4px;
+  text-align: left;
+}
+
+.activate__foot {
+  margin-top: 6px;
+  font-size: 13.5px;
+  color: var(--ink-500);
+}
+
+.activate__foot a {
+  color: var(--brand-700);
+  font-weight: 600;
+}
+
+.activate__spinner {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid var(--line-strong);
+  border-top-color: var(--brand-600);
+  animation: activate-spin 0.8s linear infinite;
+}
+
+@keyframes activate-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activate__spinner {
+    animation-duration: 2s;
+  }
+}

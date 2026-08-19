@@ -6,7 +6,7 @@ import FormSection from "../FormSection/FormSection.jsx";
 import { businessProofTypes, documentsFor } from "../../../data/signup.js";
 import "./StepDocuments.css";
 
-export default function StepDocuments({ values, errors, set, setFile }) {
+export default function StepDocuments({ values, errors, set, setFile, uploads = {} }) {
   const documents = documentsFor(values);
 
   return (
@@ -61,7 +61,8 @@ export default function StepDocuments({ values, errors, set, setFile }) {
                   file={values.files[doc.id]}
                   onSelect={(file) => setFile(doc.id, file)}
                   onRemove={() => setFile(doc.id, null)}
-                  error={errors[`file_${doc.id}`]}
+                  error={errors[`file_${doc.id}`] || uploads[doc.id]?.error}
+                  progress={uploads[doc.id]?.progress}
                 />
               )}
 

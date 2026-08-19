@@ -155,3 +155,57 @@
 .login__signup a:hover {
   text-decoration: underline;
 }
+
+/* Login method switch — phone code is primary, password secondary. */
+.login__modes {
+  display: flex;
+  gap: 6px;
+  margin-top: 22px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-2, #f7f6fb);
+}
+
+.login__modes button {
+  flex: 1;
+  border: 0;
+  background: none;
+  border-radius: 999px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-500);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.login__modes button.is-active {
+  background: #fff;
+  color: var(--brand-700);
+  box-shadow: 0 1px 3px rgba(16, 12, 40, 0.08);
+}
+
+.login__send {
+  border: 0;
+  background: none;
+  color: var(--brand-700);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+.login__send:disabled {
+  color: var(--ink-400);
+  cursor: not-allowed;
+}
+
+.login__hint-note {
+  margin-top: 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-500);
+  text-align: center;
+}

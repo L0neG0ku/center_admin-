@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import Icon from "../../../icons/Icon.jsx";
 import Button from "../../ui/Button/Button.jsx";
-import logo from "../../../assets/logo.png";
+import logo from "../../../assets/logo-purple.png";
 import { navLinks } from "../../../data/navigation.js";
 import "./SiteHeader.css";
 

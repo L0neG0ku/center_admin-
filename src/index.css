@@ -183,3 +183,63 @@ input, select, textarea {
     padding: 0 20px;
   }
 }
+
+/* Fallback shown by ErrorBoundary instead of a blank page. */
+.app-error {
+  max-width: 560px;
+  margin: 12vh auto;
+  padding: 0 24px;
+  text-align: center;
+  font-family: inherit;
+}
+
+.app-error h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink-900, #1a1730);
+}
+
+.app-error p {
+  margin-top: 10px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink-500, #6b6880);
+}
+
+.app-error__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 22px;
+}
+
+.app-error__actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 22px;
+  background: var(--brand-600, #6d4aff);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-error__actions a {
+  color: var(--brand-700, #5a3ce0);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.app-error__detail {
+  margin-top: 24px;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f7f6fb;
+  color: #6b6880;
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: left;
+  overflow: auto;
+  max-height: 260px;
+}
