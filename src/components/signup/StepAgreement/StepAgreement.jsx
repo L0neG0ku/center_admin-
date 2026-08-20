@@ -3,7 +3,14 @@ import Field from "../../ui/Field/Field.jsx";
 import Checkbox from "../../ui/Checkbox/Checkbox.jsx";
 import Icon from "../../../icons/Icon.jsx";
 import FormSection from "../FormSection/FormSection.jsx";
-import { agreementTerms } from "../../../data/signup.js";
+import {
+  acknowledgementLead,
+  acknowledgementPoints,
+  agreementDisclaimer,
+  agreementMeta,
+  agreementPreamble,
+  agreementSections,
+} from "../../../data/agreement.js";
 import "./StepAgreement.css";
 
 /** Step 4 from the sheet: read → acknowledge → sign → submit. */
@@ -39,13 +46,38 @@ export default function StepAgreement({ values, errors, set }) {
       </ol>
 
       <div className="is-wide">
-        <div className="agreement__terms" ref={termsRef} tabIndex={0} role="region" aria-label="Partner agreement">
-          {agreementTerms.map((term, index) => (
-            <p key={term.slice(0, 24)}>
-              <span>{index + 1}.</span>
-              {term}
-            </p>
+        <div className="agreement__terms" ref={termsRef} tabIndex={0} role="region" aria-label="Kribble centre onboarding acknowledgement">
+          <header className="agreement__header">
+            <p className="agreement__eyebrow">{agreementMeta.version}</p>
+            <h3>{agreementMeta.title}</h3>
+            <p>{agreementMeta.operator}</p>
+          </header>
+
+          <div className="agreement__preamble">
+            {agreementPreamble.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
+
+          {agreementSections.map(({ heading, paragraphs }) => (
+            <section className="agreement__section" key={heading}>
+              <h4>{heading}</h4>
+              {paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </section>
           ))}
+
+          <section className="agreement__section agreement__confirmation">
+            <h4>Confirmation</h4>
+            <p>{acknowledgementLead}</p>
+            <ol>
+              {acknowledgementPoints.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ol>
+            <p className="agreement__disclaimer">{agreementDisclaimer}</p>
+          </section>
         </div>
 
         <p className={`agreement__hint ${readToEnd ? "is-done" : ""}`.trim()}>
