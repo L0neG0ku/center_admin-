@@ -4,6 +4,7 @@ import Icon from "../../icons/Icon.jsx";
 import {
   Avatar,
   Btn,
+  Empty,
   Fact,
   PageHead,
   Panel,
@@ -11,17 +12,88 @@ import {
   Row,
   Search,
   Select,
-  Tabs,
+  StatCard,
   Tag,
   Who,
 } from "../../components/dash/ui.jsx";
 import DataTable from "../../components/dash/DataTable.jsx";
 import { Drawer, Modal } from "../../components/dash/Overlay.jsx";
 import { useToast } from "../../components/dash/Toast.jsx";
-import { children, childStatusTone } from "../../data/dash/children.js";
-import { classroomNames, classrooms, fmtMoney } from "../../data/dash/seed.js";
+import * as api from "../../api/endpoints.js";
+import { useAction, useResource } from "../../api/useResource.js";
 
-const statuses = ["Active", "On leave", "Graduating"];
+/**
+ * The centre's roster, from `GET /daycares/me/children`.
+ *
+ * WHAT CAME OUT, because the API does not hold it: a monthly fee amount
+ * (`fee_plan` is a free-text label, there is no money on an enrolment and no
+ * billing endpoints at all), a per-child document checklist, and a single
+ * "parent" column with one name and number.
+ *
+ * What replaced the parent column is the thing an owner actually needs to
+ * chase: how many guardians have ACCEPTED, and how many invites are still
+ * pending. A child whose parent never accepted is a child whose family cannot
+ * see a single thing the centre logs, and nothing else in the product
+ * surfaces that.
+ */
+
+const statusTone = {
+  ACTIVE: "green",
+  ON_LEAVE: "blue",
+  WITHDRAWN: "grey",
+};
+
+const statusLabel = {
+  ACTIVE: "Enrolled",
+  ON_LEAVE: "On leave",
+  WITHDRAWN: "Withdrawn",
+};
+
+const genderLabel = { MALE: "Boy", FEMALE: "Girl", OTHER: "Not specified" };
+
+const dateLabel = (iso) =>
+  iso
+    ? new Date(iso).toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "—";
+
+/** Age the way a parent says it: months under two, then years. */
+function ageLabel(dob) {
+  if (!dob) return "";
+  const born = new Date(dob);
+  const now = new Date();
+  let months =
+    (now.getFullYear() - born.getFullYear()) * 12 +
+    now.getMonth() -
+    born.getMonth();
+  if (now.getDate() < born.getDate()) months -= 1;
+  if (months < 1) return "Newborn";
+  if (months < 24) return `${months} ${months === 1 ? "month" : "months"}`;
+  const years = Math.round((months / 12) * 10) / 10;
+  return `${Number.isInteger(years) ? years : years.toFixed(1)} yrs`;
+}
+
+function toRow(child) {
+  const enrollment = child.enrollment || null;
+  return {
+    id: child.id,
+    publicId: child.public_id || "",
+    name: child.name || "",
+    dob: child.date_of_birth || null,
+    gender: child.gender || "OTHER",
+    photoUrl: child.photo_url || null,
+    room: enrollment?.classroom?.name || "",
+    roomId: enrollment?.classroom_id || "",
+    feePlan: enrollment?.fee_plan || "",
+    status: enrollment?.status || "ACTIVE",
+    startDate: enrollment?.start_date || null,
+    guardianCount: child.guardian_count ?? 0,
+    pendingInvites: child.pending_invite_count ?? 0,
+  };
+}
 
 export default function Children() {
   const toast = useToast();
@@ -30,23 +102,40 @@ export default function Children() {
   const [query, setQuery] = useState("");
   const [room, setRoom] = useState("");
   const [status, setStatus] = useState("");
-  const [selected, setSelected] = useState(null);
-  const [tab, setTab] = useState("profile");
+  const [selectedId, setSelectedId] = useState(null);
   const [adding, setAdding] = useState(params.get("new") === "1");
 
+  // The server filters by room and status, so those go in the request rather
+  // than being applied to a page of results — a centre with 132 children
+  // would otherwise filter only whatever the first page happened to contain.
+  // listAllChildren follows the pager, because per_page is capped at 100.
+  const childrenCall = useResource(
+    (signal) =>
+      api.listAllChildren(
+        { classroom_id: room || undefined, status: status || undefined },
+        { signal }
+      ),
+    [room, status]
+  );
+  const roomsCall = useResource((signal) => api.listClassrooms({ signal }), []);
+
+  const rooms = useMemo(() => roomsCall.data || [], [roomsCall.data]);
+  const all = useMemo(
+    () => (childrenCall.data || []).map(toRow),
+    [childrenCall.data]
+  );
+
+  // Name search stays local: it is instant, and the API's `search` would add
+  // a request per keystroke for a list this size.
   const rows = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return children.filter((child) => {
-      if (room && child.classroom !== room) return false;
-      if (status && child.status !== status) return false;
-      if (!needle) return true;
-      return (
+    if (!needle) return all;
+    return all.filter(
+      (child) =>
         child.name.toLowerCase().includes(needle) ||
-        child.id.toLowerCase().includes(needle) ||
-        child.guardian.toLowerCase().includes(needle)
-      );
-    });
-  }, [query, room, status]);
+        child.publicId.toLowerCase().includes(needle)
+    );
+  }, [all, query]);
 
   const closeAdd = () => {
     setAdding(false);
@@ -60,86 +149,154 @@ export default function Children() {
     {
       key: "name",
       header: "Child",
-      render: (child) => <Who name={child.name} sub={child.id} />,
+      render: (child) => <Who name={child.name} src={child.photoUrl} sub={child.publicId} />,
     },
     {
-      key: "classroom",
+      key: "room",
       header: "Classroom",
       render: (child) => (
         <span>
-          {child.classroom}
+          {child.room || <Tag tone="amber">No room</Tag>}
           <br />
           <span className="muted" style={{ fontSize: 12.5 }}>
-            {child.ageLabel}
+            {ageLabel(child.dob)}
           </span>
         </span>
       ),
     },
     {
-      key: "guardian",
-      header: "Parent / guardian",
+      key: "guardians",
+      header: "Parents",
       render: (child) => (
         <span>
-          {child.guardian}
-          <br />
-          <span className="muted" style={{ fontSize: 12.5 }}>
-            {child.guardianRelation} · {child.phone}
-          </span>
+          {child.guardianCount === 0 ? (
+            <Tag tone="red" dot>
+              None linked
+            </Tag>
+          ) : (
+            <>
+              {child.guardianCount} linked
+            </>
+          )}
+          {child.pendingInvites > 0 ? (
+            <>
+              <br />
+              <span className="muted" style={{ fontSize: 12.5 }}>
+                {child.pendingInvites} invite
+                {child.pendingInvites === 1 ? "" : "s"} pending
+              </span>
+            </>
+          ) : null}
         </span>
       ),
     },
+    { key: "feePlan", header: "Fee plan", render: (child) => child.feePlan || "—" },
     {
-      key: "feePlan",
-      header: "Fee plan",
-      render: (child) => (
-        <span>
-          {child.feePlan}
-          <br />
-          <span className="muted" style={{ fontSize: 12.5 }}>
-            {fmtMoney(child.monthlyFee)} / month
-          </span>
-        </span>
-      ),
-    },
-    {
-      key: "allergies",
-      header: "Allergies",
-      render: (child) =>
-        child.allergies.length ? (
-          <Tag tone="red">{child.allergies.join(", ")}</Tag>
-        ) : (
-          <span className="muted">None</span>
-        ),
+      key: "startDate",
+      header: "Enrolled",
+      render: (child) => <span className="nowrap">{dateLabel(child.startDate)}</span>,
     },
     {
       key: "status",
       header: "Status",
       render: (child) => (
-        <Tag tone={childStatusTone[child.status]} dot>
-          {child.status}
+        <Tag tone={statusTone[child.status] || "grey"} dot>
+          {statusLabel[child.status] || child.status}
         </Tag>
       ),
     },
   ];
 
+  const noParent = all.filter((child) => child.guardianCount === 0).length;
+
+  if (childrenCall.error) {
+    return (
+      <>
+        <PageHead title="Children" />
+        <Panel>
+          <Empty
+            icon="alertTriangle"
+            title="Could not load the roster"
+            body={childrenCall.error.message}
+            action={
+              <Btn variant="outline" onClick={childrenCall.reload}>
+                Try again
+              </Btn>
+            }
+          />
+        </Panel>
+      </>
+    );
+  }
+
   return (
     <>
       <PageHead
         title="Children"
-        sub={`${children.length} children on the roster across ${classrooms.length} classrooms`}
+        sub={
+          childrenCall.loading
+            ? "Loading the roster..."
+            : `${all.length} ${all.length === 1 ? "child" : "children"}`
+        }
       >
-        <Btn variant="outline" icon="download" onClick={() => toast("Roster exported as CSV")}>
-          Export
-        </Btn>
-        <Btn icon="plus" onClick={() => setAdding(true)}>
-          Add child
+        <Btn icon="userPlus" onClick={() => setAdding(true)}>
+          Add a child
         </Btn>
       </PageHead>
 
+      <div className="stats">
+        <StatCard icon="baby" tone="brand" label="On the roster" value={all.length} />
+        <StatCard
+          icon="checkCircle"
+          tone="green"
+          label="Enrolled"
+          value={all.filter((c) => c.status === "ACTIVE").length}
+        />
+        <StatCard
+          icon="calendar"
+          tone="blue"
+          label="On leave"
+          value={all.filter((c) => c.status === "ON_LEAVE").length}
+        />
+        <StatCard
+          icon="alertTriangle"
+          tone={noParent > 0 ? "amber" : "grey"}
+          label="No parent linked"
+          value={noParent}
+        />
+      </div>
+
+      {noParent > 0 ? (
+        <p className="note-box" style={{ marginBottom: 16 }}>
+          <Icon name="alertTriangle" size={15} />{" "}
+          {noParent === 1 ? "One child has" : `${noParent} children have`} no
+          parent linked yet — their family cannot see anything the centre
+          logs until an invite is accepted.
+        </p>
+      ) : null}
+
       <div className="toolbar">
-        <Search value={query} onChange={setQuery} placeholder="Search by name, ID or parent..." />
-        <Select value={room} onChange={setRoom} options={classroomNames} placeholder="All classrooms" />
-        <Select value={status} onChange={setStatus} options={statuses} placeholder="All statuses" />
+        <Search
+          value={query}
+          onChange={setQuery}
+          placeholder="Search by name or ID..."
+        />
+        <Select
+          value={room}
+          onChange={setRoom}
+          options={rooms.map((r) => ({ value: r.id, label: r.name }))}
+          placeholder="All classrooms"
+        />
+        <Select
+          value={status}
+          onChange={setStatus}
+          options={[
+            { value: "ACTIVE", label: "Enrolled" },
+            { value: "ON_LEAVE", label: "On leave" },
+            { value: "WITHDRAWN", label: "Withdrawn" },
+          ]}
+          placeholder="Any status"
+        />
         <div className="toolbar__spacer" />
         <Reset
           onClick={() => {
@@ -155,267 +312,400 @@ export default function Children() {
         badge={{ label: `${rows.length} shown`, tone: "brand" }}
         flush
       >
-        <DataTable
-          columns={columns}
-          rows={rows}
-          onRowClick={(child) => {
-            setSelected(child);
-            setTab("profile");
-          }}
-          selectedId={selected?.id}
-          empty={{
-            title: "No children match those filters",
-            body: "Try a different classroom, or clear the search.",
-          }}
-        />
+        {childrenCall.loading ? (
+          <Empty icon="baby" title="Loading..." body="Fetching the roster." />
+        ) : all.length === 0 ? (
+          <Empty
+            icon="userPlus"
+            title="No children yet"
+            body="Enrol a child and invite their parent. The parent app shows nothing until an invite is accepted."
+            action={<Btn icon="userPlus" onClick={() => setAdding(true)}>Add a child</Btn>}
+          />
+        ) : (
+          <DataTable
+            columns={columns}
+            rows={rows}
+            onRowClick={(child) => setSelectedId(child.id)}
+            selectedId={selectedId}
+            empty={{
+              title: "No children match that search",
+              body: "Try a different name, or clear the filters.",
+            }}
+          />
+        )}
       </Panel>
 
-      {selected ? (
-        <Drawer
-          title="Child profile"
-          sub="Admission, parents, medical and attendance"
-          onClose={() => setSelected(null)}
-          footer={
-            <>
-              <Btn variant="outline" icon="message" onClick={() => toast("Message sent to parent")}>
-                Message parent
-              </Btn>
-              <Btn icon="pencil" onClick={() => toast("Profile saved")}>
-                Edit profile
-              </Btn>
-            </>
-          }
-        >
-          <div className="dident">
-            <Avatar name={selected.name} size={48} />
-            <div className="dident__text">
-              <strong>{selected.name}</strong>
-              <span>
-                {selected.id} · {selected.classroom}
-              </span>
-            </div>
-            <Tag tone={childStatusTone[selected.status]} dot>
-              {selected.status}
-            </Tag>
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <Tabs
-              value={tab}
-              onChange={setTab}
-              tabs={[
-                { id: "profile", label: "Profile" },
-                { id: "medical", label: "Medical" },
-                { id: "docs", label: "Documents" },
-                { id: "attendance", label: "Attendance" },
-              ]}
-            />
-          </div>
-
-          {tab === "profile" ? (
-            <>
-              <section className="dsec">
-                <h3>Admission details</h3>
-                <div className="dgrid">
-                  <Fact label="Date of birth" value={selected.dobLabel} />
-                  <Fact label="Age" value={selected.ageLabel} />
-                  <Fact label="Gender" value={selected.gender} />
-                  <Fact label="Admitted on" value={selected.admittedLabel} />
-                  <Fact label="Fee plan" value={selected.feePlan} />
-                  <Fact label="Monthly fee" value={fmtMoney(selected.monthlyFee)} />
-                </div>
-              </section>
-
-              <section className="dsec">
-                <h3>Parents</h3>
-                <div className="dgrid">
-                  <Fact label="Mother" value={selected.mother} />
-                  <Fact label="Father" value={selected.father} />
-                  <Fact label="Primary contact" value={selected.phone} />
-                  <Fact label="Alternate" value={selected.altPhone} />
-                </div>
-                <div style={{ marginTop: 14 }}>
-                  <Fact label="Email" value={selected.email} />
-                </div>
-                <div style={{ marginTop: 14 }}>
-                  <Fact label="Home address" value={selected.address} />
-                </div>
-              </section>
-
-              <section className="dsec">
-                <h3>Emergency contacts</h3>
-                {selected.emergency.map((contact) => (
-                  <div key={contact.name} className="mini-card">
-                    <span className="mini-card__icon tone-red">
-                      <Icon name="phone" size={16} />
-                    </span>
-                    <div>
-                      <strong>{contact.name}</strong>
-                      <span>
-                        {contact.relation} · {contact.phone}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </section>
-            </>
-          ) : null}
-
-          {tab === "medical" ? (
-            <>
-              <section className="dsec">
-                <h3>Allergies</h3>
-                {selected.allergies.length ? (
-                  <div className="chips">
-                    {selected.allergies.map((allergy) => (
-                      <span key={allergy} className="chip chip--red">
-                        <Icon name="alertTriangle" size={14} />
-                        {allergy}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="muted">No allergies recorded.</p>
-                )}
-              </section>
-
-              <section className="dsec">
-                <h3>Medical notes</h3>
-                <p className="note-box">{selected.medical}</p>
-              </section>
-
-              <section className="dsec">
-                <h3>Other</h3>
-                <Row label="Blood group" value={selected.bloodGroup} />
-                <Row label="Nurse on site" value="Yes — Savitha Rao" />
-                <Row label="Medication at centre" value="None" />
-              </section>
-            </>
-          ) : null}
-
-          {tab === "docs" ? (
-            <section className="dsec">
-              <h3>Admission documents</h3>
-              <ul className="doclist">
-                {selected.documents.map((doc) => (
-                  <li key={doc.name}>
-                    <span className={`mini-card__icon ${doc.status === "Verified" ? "tone-green" : "tone-amber"}`}>
-                      <Icon name={doc.status === "Verified" ? "fileCheck" : "fileText"} size={16} />
-                    </span>
-                    <div>
-                      <strong>{doc.name}</strong>
-                      <span className="muted">
-                        {doc.status === "Verified" ? "Uploaded and verified" : "Not received yet"}
-                      </span>
-                    </div>
-                    <Tag tone={doc.status === "Verified" ? "green" : "amber"}>{doc.status}</Tag>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          {tab === "attendance" ? (
-            <>
-              <section className="dsec">
-                <h3>This term</h3>
-                <div className="dgrid">
-                  <Fact label="Attendance rate" value={`${selected.attendanceRate}%`} />
-                  <Fact label="Days absent" value={`${Math.round((100 - selected.attendanceRate) / 4)} this month`} />
-                </div>
-                <div className="dbar" style={{ marginTop: 14 }}>
-                  <span style={{ width: `${selected.attendanceRate}%` }} />
-                </div>
-              </section>
-
-              <section className="dsec">
-                <h3>Last 6 days</h3>
-                {["Present", "Present", "Absent", "Present", "Late", "Present"].map((state, index) => (
-                  <Row
-                    key={index}
-                    label={new Date(Date.now() - (index + 1) * 86400000).toLocaleDateString("en-IN", {
-                      weekday: "short",
-                      day: "numeric",
-                      month: "short",
-                    })}
-                    value={
-                      <Tag tone={state === "Present" ? "green" : state === "Late" ? "amber" : "red"}>
-                        {state}
-                      </Tag>
-                    }
-                  />
-                ))}
-              </section>
-            </>
-          ) : null}
-        </Drawer>
+      {selectedId ? (
+        <ChildDrawer
+          childId={selectedId}
+          onClose={() => setSelectedId(null)}
+          onChanged={(message) => {
+            childrenCall.reload();
+            if (message) toast(message);
+          }}
+        />
       ) : null}
 
       {adding ? (
-        <Modal
-          title="Add a child"
-          sub="Enrol a child and capture the parent's details."
+        <AddChildModal
+          rooms={rooms}
           onClose={closeAdd}
-          size="lg"
-          footer={
-            <>
-              <Btn variant="outline" onClick={closeAdd}>
-                Cancel
-              </Btn>
-              <Btn
-                icon="check"
-                onClick={() => {
-                  closeAdd();
-                  toast("Child added to the roster");
-                }}
-              >
-                Add child
-              </Btn>
-            </>
-          }
-        >
-          <div className="dfield-2">
-            <label className="dfield">
-              <span>Child's full name</span>
-              <input placeholder="e.g. Aarav Shah" />
-            </label>
-            <label className="dfield">
-              <span>Date of birth</span>
-              <input type="date" />
-            </label>
-            <label className="dfield">
-              <span>Classroom</span>
-              <select defaultValue="">
-                <option value="">Select a classroom</option>
-                {classroomNames.map((name) => (
-                  <option key={name}>{name}</option>
-                ))}
-              </select>
-            </label>
-            <label className="dfield">
-              <span>Fee plan</span>
-              <select defaultValue="">
-                <option value="">Select a plan</option>
-                <option>Full-day</option>
-                <option>Half-day</option>
-              </select>
-            </label>
-            <label className="dfield">
-              <span>Parent name</span>
-              <input placeholder="e.g. Priya Shah" />
-            </label>
-            <label className="dfield">
-              <span>Parent mobile</span>
-              <input placeholder="+91 98765 43210" />
-            </label>
-          </div>
-
-          <label className="dfield">
-            <span>Allergies or medical notes</span>
-            <textarea placeholder="Anything the teachers should know on day one" />
-          </label>
-        </Modal>
+          onAdded={(name) => {
+            closeAdd();
+            childrenCall.reload();
+            toast(`${name} enrolled — invite sent to the parent`);
+          }}
+        />
       ) : null}
     </>
+  );
+}
+
+/** One child in full: the detail call is the only one with guardians. */
+function ChildDrawer({ childId, onClose, onChanged }) {
+  const call = useResource(
+    (signal) => api.getChild(childId, { signal }),
+    [childId]
+  );
+  const child = call.data;
+
+  if (call.loading) {
+    return (
+      <Drawer title="Child" sub="Loading..." onClose={onClose}>
+        <Empty icon="baby" title="Loading..." body="Fetching this child." />
+      </Drawer>
+    );
+  }
+
+  if (call.error || !child) {
+    return (
+      <Drawer title="Child" onClose={onClose}>
+        <Empty
+          icon="alertTriangle"
+          title="Could not load this child"
+          body={call.error?.message || "Please try again."}
+          action={<Btn variant="outline" onClick={call.reload}>Try again</Btn>}
+        />
+      </Drawer>
+    );
+  }
+
+  const enrollment = child.enrollment || {};
+  const guardians = child.guardians || [];
+  const invites = (child.invites || []).filter(
+    (invite) => invite.status === "PENDING"
+  );
+
+  return (
+    <Drawer
+      title="Child"
+      sub="Enrolment, parents and medical details"
+      onClose={onClose}
+      wide
+    >
+      <div className="dident">
+        <Avatar name={child.name} size={48} src={child.photo_url} />
+        <div className="dident__text">
+          <strong>{child.name}</strong>
+          <span>
+            {ageLabel(child.date_of_birth)} ·{" "}
+            {genderLabel[child.gender] || "—"} · {child.public_id}
+          </span>
+        </div>
+        <Tag tone={statusTone[enrollment.status] || "grey"} dot>
+          {statusLabel[enrollment.status] || "—"}
+        </Tag>
+      </div>
+
+      <section className="dsec">
+        <h3>Enrolment</h3>
+        <div className="dgrid">
+          <Fact label="Classroom" value={enrollment.classroom?.name || "Not assigned"} />
+          <Fact label="Fee plan" value={enrollment.fee_plan || "—"} />
+          <Fact label="Started" value={dateLabel(enrollment.start_date)} />
+          <Fact label="Date of birth" value={dateLabel(child.date_of_birth)} />
+        </div>
+      </section>
+
+      <section className="dsec">
+        <h3>
+          <Icon name="heart" size={16} /> Medical
+        </h3>
+        {/* Blank means nobody recorded it, which is not the same as none —
+            so each row says which. */}
+        <Row label="Blood group" value={child.blood_group || <span className="muted">Not recorded</span>} />
+        <Row label="Allergies" value={child.allergies || <span className="muted">None recorded</span>} />
+        <Row label="Notes" value={child.medical_notes || <span className="muted">None recorded</span>} />
+      </section>
+
+      <section className="dsec">
+        <h3>Parents</h3>
+        {guardians.length === 0 ? (
+          <p className="note-box">
+            No parent has accepted yet. Until one does, this family sees
+            nothing in the Kribble app — no attendance, no photos, no daily
+            care.
+          </p>
+        ) : (
+          guardians.map((guardian) => (
+            <Row
+              key={guardian.id}
+              label={
+                <>
+                  {guardian.user_name}
+                  {guardian.is_primary ? (
+                    <>
+                      {" "}
+                      <Tag tone="brand">Primary</Tag>
+                    </>
+                  ) : null}
+                </>
+              }
+              value={
+                <span className="nowrap">
+                  {guardian.relation} · {guardian.user_phone || "no number"}
+                </span>
+              }
+            />
+          ))
+        )}
+      </section>
+
+      {invites.length > 0 ? (
+        <section className="dsec">
+          <h3>Pending invites</h3>
+          {invites.map((invite) => (
+            <InviteRow
+              key={invite.id}
+              childId={childId}
+              invite={invite}
+              onChanged={(message) => {
+                call.reload();
+                onChanged(message);
+              }}
+            />
+          ))}
+        </section>
+      ) : null}
+    </Drawer>
+  );
+}
+
+function InviteRow({ childId, invite, onChanged }) {
+  const resend = useAction(() => api.resendGuardianInvite(childId, invite.id));
+  const revoke = useAction(() => api.revokeGuardianInvite(childId, invite.id));
+
+  return (
+    <div className="drow">
+      <span>
+        {invite.phone}
+        <br />
+        <span className="muted" style={{ fontSize: 12.5 }}>
+          {invite.relation} · expires {dateLabel(invite.expires_at)}
+        </span>
+      </span>
+      <strong style={{ display: "flex", gap: 8 }}>
+        <Btn
+          size="sm"
+          variant="outline"
+          disabled={resend.busy}
+          onClick={() =>
+            resend
+              .run()
+              .then(() => onChanged("Invite sent again"))
+              .catch(() => {})
+          }
+        >
+          Resend
+        </Btn>
+        <Btn
+          size="sm"
+          variant="danger"
+          disabled={revoke.busy}
+          onClick={() =>
+            revoke
+              .run()
+              .then(() => onChanged("Invite revoked"))
+              .catch(() => {})
+          }
+        >
+          Revoke
+        </Btn>
+      </strong>
+    </div>
+  );
+}
+
+/**
+ * Enrol a child.
+ *
+ * `primary_guardian` is REQUIRED by the API — a child cannot exist without
+ * someone to invite, and creating the child creates the invite in the same
+ * call. The old form collected a parent name it then discarded; what the API
+ * wants is a phone number and a relation, because the number is what the
+ * invite is matched against when the parent signs up.
+ */
+function AddChildModal({ rooms, onClose, onAdded }) {
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("");
+  const [classroomId, setClassroomId] = useState("");
+  const [feePlan, setFeePlan] = useState("");
+  const [guardianPhone, setGuardianPhone] = useState("");
+  const [relation, setRelation] = useState("MOTHER");
+  const [localError, setLocalError] = useState(null);
+
+  const create = useAction(() =>
+    api.createChild({
+      name: name.trim(),
+      date_of_birth: dob,
+      gender,
+      classroom_id: classroomId,
+      fee_plan: feePlan.trim(),
+      primary_guardian: { phone: guardianPhone.trim(), relation },
+    })
+  );
+
+  const submit = () => {
+    setLocalError(null);
+    if (!name.trim()) return setLocalError("Enter the child's name.");
+    if (!dob) return setLocalError("Enter their date of birth.");
+    if (!gender) return setLocalError("Choose a gender.");
+    if (!classroomId) return setLocalError("Choose a classroom.");
+    if (!feePlan.trim()) return setLocalError("Enter a fee plan.");
+    if (guardianPhone.replace(/\D/g, "").length < 10) {
+      return setLocalError(
+        "Enter the parent's 10-digit mobile — the invite is matched on it."
+      );
+    }
+    return create
+      .run()
+      .then(() => onAdded(name.trim()))
+      .catch(() => {});
+  };
+
+  const error = localError || create.error?.message;
+  const fieldErrors = create.error?.fields || {};
+
+  return (
+    <Modal
+      title="Add a child"
+      sub="Enrolling a child also invites their parent."
+      onClose={onClose}
+      size="lg"
+      footer={
+        <>
+          <Btn variant="outline" onClick={onClose}>
+            Cancel
+          </Btn>
+          <Btn icon="check" disabled={create.busy} onClick={submit}>
+            {create.busy ? "Enrolling..." : "Enrol & invite"}
+          </Btn>
+        </>
+      }
+    >
+      <div className="dfield-2">
+        <label className="dfield">
+          <span>Child's full name</span>
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="e.g. Aarav Shah"
+          />
+          {fieldErrors.name ? (
+            <small className="dfield__error">{fieldErrors.name}</small>
+          ) : null}
+        </label>
+        <label className="dfield">
+          <span>Date of birth</span>
+          <input
+            type="date"
+            value={dob}
+            onChange={(event) => setDob(event.target.value)}
+          />
+          {fieldErrors.date_of_birth ? (
+            <small className="dfield__error">{fieldErrors.date_of_birth}</small>
+          ) : null}
+        </label>
+        <label className="dfield">
+          <span>Gender</span>
+          <select
+            value={gender}
+            onChange={(event) => setGender(event.target.value)}
+          >
+            <option value="">Select</option>
+            <option value="MALE">Boy</option>
+            <option value="FEMALE">Girl</option>
+            <option value="OTHER">Prefer not to say</option>
+          </select>
+        </label>
+        <label className="dfield">
+          <span>Classroom</span>
+          <select
+            value={classroomId}
+            onChange={(event) => setClassroomId(event.target.value)}
+          >
+            <option value="">Select a classroom</option>
+            {rooms.map((entry) => (
+              <option key={entry.id} value={entry.id}>
+                {entry.name}
+              </option>
+            ))}
+          </select>
+          {rooms.length === 0 ? (
+            <small className="dfield__error">
+              Add a classroom first — a child is enrolled into one.
+            </small>
+          ) : null}
+        </label>
+        <label className="dfield">
+          <span>Fee plan</span>
+          <input
+            value={feePlan}
+            onChange={(event) => setFeePlan(event.target.value)}
+            placeholder="e.g. Full-day monthly"
+          />
+        </label>
+        <label className="dfield">
+          <span>Parent's relation</span>
+          <select
+            value={relation}
+            onChange={(event) => setRelation(event.target.value)}
+          >
+            <option value="MOTHER">Mother</option>
+            <option value="FATHER">Father</option>
+            <option value="GUARDIAN">Guardian</option>
+          </select>
+        </label>
+      </div>
+
+      <label className="dfield" style={{ marginTop: 14 }}>
+        <span>Parent's mobile — the invite goes to this number</span>
+        <input
+          value={guardianPhone}
+          onChange={(event) => setGuardianPhone(event.target.value)}
+          placeholder="+91 98765 43210"
+          inputMode="tel"
+        />
+        {fieldErrors.primary_guardian || fieldErrors.phone ? (
+          <small className="dfield__error">
+            {fieldErrors.primary_guardian || fieldErrors.phone}
+          </small>
+        ) : null}
+      </label>
+
+      {error ? (
+        <p className="dfield__error" style={{ marginTop: 14 }}>
+          {error}
+        </p>
+      ) : null}
+
+      <p className="note-box" style={{ marginTop: 14 }}>
+        The parent signs up with this number, accepts the invite and grants
+        consent. Until they do, the centre can log care but the family sees
+        none of it — and caretakers cannot log care at all for a child with no
+        consent.
+      </p>
+    </Modal>
   );
 }

@@ -1,37 +1,50 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import Icon from "../../icons/Icon.jsx";
-import { Avatar, Btn, PageHead, Panel, Switch, Tabs, Tag } from "../../components/dash/ui.jsx";
-import { Modal } from "../../components/dash/Overlay.jsx";
+import {
+  Avatar,
+  Btn,
+  Empty,
+  Fact,
+  PageHead,
+  Panel,
+  Row,
+  Tabs,
+  Tag,
+  Who,
+} from "../../components/dash/ui.jsx";
 import { useToast } from "../../components/dash/Toast.jsx";
 import { useAuth } from "../../auth/AuthContext.jsx";
-import { staff } from "../../data/dash/staff.js";
+import * as api from "../../api/endpoints.js";
+import { useAction, useResource } from "../../api/useResource.js";
 
-const accessLevels = ["Full access", "Teachers only", "No billing access"];
-
+/**
+ * Your account, and who else can get into the centre.
+ *
+ * THE CONSTRAINT THAT SHAPES THIS PAGE: there is no endpoint for an owner to
+ * change their own name, email or photo. `PATCH /parents/me` exists but is
+ * parent-scoped; an owner's identity comes from signup and the verification
+ * call, and nothing exposes an edit. So the "Your details" form with its Save
+ * button is gone and the fields are shown as read-only facts, with the one
+ * thing that genuinely can be changed — the password — given its own panel.
+ *
+ * Also gone: the notification-preference switches (six of them), the
+ * two-factor toggle, and the language/region picker. None has a column to
+ * write to. A switch that flips, says "Preferences saved", and silently
+ * forgets is worse than no switch: the owner thinks they have turned
+ * something off.
+ *
+ * The team tab is real — it is the same staff list as the Staff page, read
+ * here because "who can get into my centre" is an account question.
+ */
 export default function Settings() {
   const toast = useToast();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [tab, setTab] = useState("account");
-  const [inviting, setInviting] = useState(false);
-  const [twoFactor, setTwoFactor] = useState(false);
-  const [notifications, setNotifications] = useState({
-    admissions: true,
-    fees: true,
-    attendance: false,
-    tickets: true,
-    digest: true,
-    marketing: false,
-  });
-
-  const admins = staff.slice(0, 4).map((person, index) => ({
-    ...person,
-    access: accessLevels[index % accessLevels.length],
-    lastActive: ["Just now", "2 hours ago", "Yesterday", "4 days ago"][index],
-  }));
 
   return (
     <>
-      <PageHead title="Settings" sub="Your account, staff access, notifications and security" />
+      <PageHead title="Settings" sub="Your account and your centre's access" />
 
       <div style={{ marginBottom: 18 }}>
         <Tabs
@@ -39,287 +52,386 @@ export default function Settings() {
           onChange={setTab}
           tabs={[
             { id: "account", label: "Account" },
-            { id: "staff", label: "Staff accounts" },
+            { id: "team", label: "Team access" },
             { id: "notifications", label: "Notifications" },
-            { id: "security", label: "Security" },
           ]}
         />
       </div>
 
       {tab === "account" ? (
-        <div className="dcols dcols--main">
-          <Panel title="Your details">
-            <div className="dident">
-              <Avatar name={user.name} size={48} />
-              <div className="dident__text">
-                <strong>{user.name}</strong>
-                <span>
-                  {user.role} · {user.email}
-                </span>
-              </div>
-              <Btn size="sm" variant="outline" onClick={() => toast("Photo upload arrives with the backend")}>
-                Change photo
-              </Btn>
-            </div>
-
-            <div className="dfield-2">
-              <label className="dfield">
-                <span>Full name</span>
-                <input defaultValue={user.name} />
-              </label>
-              <label className="dfield">
-                <span>Role</span>
-                <input defaultValue={user.role} readOnly />
-              </label>
-              <label className="dfield">
-                <span>Email</span>
-                <input defaultValue={user.email} />
-              </label>
-              <label className="dfield">
-                <span>Mobile</span>
-                <input defaultValue="+91 98765 43210" />
-              </label>
-            </div>
-
-            <Btn icon="check" onClick={() => toast("Details saved")}>
-              Save details
-            </Btn>
-          </Panel>
-
-          <Panel title="Language & region">
-            <label className="dfield">
-              <span>Language</span>
-              <select defaultValue="English">
-                <option>English</option>
-                <option>हिन्दी</option>
-                <option>తెలుగు</option>
-              </select>
-            </label>
-            <label className="dfield">
-              <span>Time zone</span>
-              <select defaultValue="Asia/Kolkata">
-                <option>Asia/Kolkata</option>
-              </select>
-            </label>
-            <label className="dfield">
-              <span>Date format</span>
-              <select defaultValue="DD/MM/YYYY">
-                <option>DD/MM/YYYY</option>
-                <option>MM/DD/YYYY</option>
-              </select>
-            </label>
-            <Btn variant="outline" className="dbtn--block" onClick={() => toast("Preferences saved")}>
-              Save preferences
-            </Btn>
-          </Panel>
-        </div>
+        <AccountTab user={user} signOut={signOut} toast={toast} />
       ) : null}
+      {tab === "team" ? <TeamTab /> : null}
+      {tab === "notifications" ? <NotificationsTab /> : null}
+    </>
+  );
+}
 
-      {tab === "staff" ? (
-        <Panel
-          title="Staff accounts"
-          sub="Who can log in to this dashboard, and what they can see"
-          tools={
-            <Btn size="sm" variant="soft" icon="userPlus" onClick={() => setInviting(true)}>
-              Invite
-            </Btn>
-          }
-        >
-          <ul className="acclist">
-            {admins.map((person) => (
-              <li key={person.id}>
-                <Avatar name={person.name} size={40} />
-                <div className="acclist__text">
-                  <strong>{person.name}</strong>
-                  <span className="muted">
-                    {person.email} · active {person.lastActive}
-                  </span>
-                </div>
-                <Tag tone={person.access === "Full access" ? "brand" : "grey"}>{person.access}</Tag>
-                <Btn size="sm" variant="outline" onClick={() => toast(`Access updated for ${person.name}`)}>
-                  Change
-                </Btn>
-                <Btn size="sm" variant="danger" onClick={() => toast(`${person.name}'s access removed`)}>
-                  Remove
-                </Btn>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-      ) : null}
+function AccountTab({ user, signOut, toast }) {
+  // /auth/me is the source for identity. The AuthContext already normalises
+  // it, but the verified flags are worth reading straight so the page does
+  // not depend on that mapping staying the same.
+  const meCall = useResource((signal) => api.getMe({ signal }), []);
+  const me = meCall.data || {};
 
-      {tab === "notifications" ? (
-        <div className="dcols dcols--main">
-          <Panel title="What we notify you about">
-            <Switch
-              on={notifications.admissions}
-              onChange={(value) => setNotifications({ ...notifications, admissions: value })}
-              title="New admission requests"
-              body="When a parent applies through the Kribble app"
-            />
-            <Switch
-              on={notifications.fees}
-              onChange={(value) => setNotifications({ ...notifications, fees: value })}
-              title="Fee payments and overdue invoices"
-              body="Payment received, and a nudge when an invoice goes overdue"
-            />
-            <Switch
-              on={notifications.attendance}
-              onChange={(value) => setNotifications({ ...notifications, attendance: value })}
-              title="Attendance not marked"
-              body="If a classroom register is still empty by 10 AM"
-            />
-            <Switch
-              on={notifications.tickets}
-              onChange={(value) => setNotifications({ ...notifications, tickets: value })}
-              title="Support ticket replies"
-              body="When the Kribble team responds to you"
-            />
-            <Switch
-              on={notifications.digest}
-              onChange={(value) => setNotifications({ ...notifications, digest: value })}
-              title="Weekly summary email"
-              body="Attendance, collections and admissions, every Monday"
-            />
-            <Switch
-              on={notifications.marketing}
-              onChange={(value) => setNotifications({ ...notifications, marketing: value })}
-              title="Product updates from Kribble"
-              body="New features and occasional partner tips"
-            />
-            <Btn icon="check" style={{ marginTop: 18 }} onClick={() => toast("Notification preferences saved")}>
-              Save preferences
-            </Btn>
-          </Panel>
-
-          <Panel title="How you get them">
-            <ul className="statlist">
-              <li>
-                <span>In-app</span>
-                <strong>Always on</strong>
-              </li>
-              <li>
-                <span>Email</span>
-                <strong>{user.email}</strong>
-              </li>
-              <li>
-                <span>SMS</span>
-                <strong>+91 98765 43210</strong>
-              </li>
-              <li>
-                <span>WhatsApp</span>
-                <strong>Not connected</strong>
-              </li>
-            </ul>
-            <Btn variant="outline" className="dbtn--block" onClick={() => toast("WhatsApp connect flow opens with the backend")}>
-              Connect WhatsApp
-            </Btn>
-          </Panel>
-        </div>
-      ) : null}
-
-      {tab === "security" ? (
-        <div className="dcols dcols--main">
-          <Panel title="Change password">
-            <label className="dfield">
-              <span>Current password</span>
-              <input type="password" placeholder="••••••••" />
-            </label>
-            <label className="dfield">
-              <span>New password</span>
-              <input type="password" placeholder="At least 8 characters" />
-            </label>
-            <label className="dfield">
-              <span>Confirm new password</span>
-              <input type="password" placeholder="Repeat the new password" />
-            </label>
-            <Btn icon="lock" onClick={() => toast("Password updated")}>
-              Update password
-            </Btn>
-          </Panel>
-
-          <div className="dstack">
-            <Panel title="Two-factor authentication">
-              <Switch
-                on={twoFactor}
-                onChange={(value) => {
-                  setTwoFactor(value);
-                  toast(value ? "Two-factor authentication enabled" : "Two-factor authentication turned off");
-                }}
-                title="Require a code at login"
-                body="We'll send a 6-digit code to your mobile each time you sign in"
-              />
-              <p className="note-box" style={{ marginTop: 14 }}>
-                Strongly recommended — your dashboard holds children's personal and medical details.
-              </p>
-            </Panel>
-
-            <Panel title="Where you're signed in">
-              <ul className="acclist acclist--tight">
-                {[
-                  ["Chrome · Windows", "Hyderabad · this device", "Active now"],
-                  ["Safari · iPhone", "Hyderabad", "2 days ago"],
-                  ["Chrome · Android", "Hyderabad", "1 week ago"],
-                ].map(([device, where, when]) => (
-                  <li key={device}>
-                    <span className="mini-card__icon tone-grey">
-                      <Icon name="lock" size={16} />
-                    </span>
-                    <div className="acclist__text">
-                      <strong>{device}</strong>
-                      <span className="muted">
-                        {where} · {when}
-                      </span>
-                    </div>
-                    <Btn size="sm" variant="outline" onClick={() => toast("Session signed out")}>
-                      Sign out
-                    </Btn>
-                  </li>
-                ))}
-              </ul>
-            </Panel>
+  return (
+    <>
+      <Panel title="Your details" sub="From your Kribble account">
+        <div className="dident">
+          <Avatar
+            name={me.full_name || user?.name || ""}
+            size={48}
+            src={me.avatar_url || user?.avatarUrl}
+          />
+          <div className="dident__text">
+            <strong>{me.full_name || user?.name || "—"}</strong>
+            <span>
+              {user?.role || "Centre owner"}
+              {me.public_id ? ` · ${me.public_id}` : ""}
+            </span>
           </div>
         </div>
-      ) : null}
 
-      {inviting ? (
-        <Modal
-          title="Invite a staff account"
-          sub="They'll set their own password from the invite link."
-          onClose={() => setInviting(false)}
-          footer={
-            <>
-              <Btn variant="outline" onClick={() => setInviting(false)}>
-                Cancel
-              </Btn>
-              <Btn
-                icon="send"
-                onClick={() => {
-                  setInviting(false);
-                  toast("Invite sent");
-                }}
-              >
-                Send invite
-              </Btn>
-            </>
+        <div className="dgrid" style={{ marginTop: 16 }}>
+          <Fact
+            label="Email"
+            value={
+              me.email ? (
+                <>
+                  {me.email}{" "}
+                  {me.email_verified ? (
+                    <Tag tone="green">Verified</Tag>
+                  ) : (
+                    <Tag tone="amber">Unverified</Tag>
+                  )}
+                </>
+              ) : (
+                "—"
+              )
+            }
+          />
+          <Fact
+            label="Mobile"
+            value={
+              me.phone ? (
+                <>
+                  {me.phone}{" "}
+                  {me.phone_verified ? (
+                    <Tag tone="green">Verified</Tag>
+                  ) : (
+                    <Tag tone="amber">Unverified</Tag>
+                  )}
+                </>
+              ) : (
+                "—"
+              )
+            }
+          />
+        </div>
+
+        {/* Said plainly rather than offering a form that cannot save. */}
+        <p className="note-box" style={{ marginTop: 16 }}>
+          <Icon name="helpCircle" size={15} /> Your name, email and photo come
+          from your application and cannot be edited here yet. Contact support
+          to change them. Your centre&rsquo;s own details are on{" "}
+          <Link to="/dashboard/centre-profile">Centre profile</Link>.
+        </p>
+      </Panel>
+
+      <PasswordPanel hasPassword={me.has_password} toast={toast} />
+
+      <Panel title="Sign out">
+        <Row
+          label="This browser"
+          value={
+            <Btn
+              variant="outline"
+              icon="logOut"
+              onClick={() => signOut?.()}
+            >
+              Sign out
+            </Btn>
           }
-        >
-          <label className="dfield">
-            <span>Email address</span>
-            <input placeholder="name@littlestars.in" />
-          </label>
-          <label className="dfield">
-            <span>Access level</span>
-            <select defaultValue="">
-              <option value="">Choose what they can see</option>
-              {accessLevels.map((level) => (
-                <option key={level}>{level}</option>
-              ))}
-            </select>
-            <small>Only full access can see billing and payouts.</small>
-          </label>
-        </Modal>
-      ) : null}
+        />
+        <p className="muted" style={{ fontSize: 12.5, marginTop: 10 }}>
+          Signing out here revokes this browser&rsquo;s session. Your
+          caretakers&rsquo; sessions on the staff app are not affected.
+        </p>
+      </Panel>
+    </>
+  );
+}
+
+/**
+ * Change password.
+ *
+ * `POST /auth/password/change` takes the current one and the new one. An
+ * owner who signed in by OTP and never set a password has `has_password:
+ * false` — for them this is not a change but a first set, and the endpoint
+ * needs a current password they do not have, so the panel says so instead of
+ * presenting a form that cannot succeed.
+ */
+function PasswordPanel({ hasPassword, toast }) {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [localError, setLocalError] = useState(null);
+
+  const change = useAction(() =>
+    api.changePassword({ current_password: current, new_password: next })
+  );
+
+  if (hasPassword === false) {
+    return (
+      <Panel title="Password">
+        <p className="note-box">
+          <Icon name="key" size={15} /> Your account has no password — you sign
+          in with your mobile number and a code. Setting one is done through
+          the activation link emailed when your centre was approved.
+        </p>
+      </Panel>
+    );
+  }
+
+  const submit = () => {
+    setLocalError(null);
+    if (!current) return setLocalError("Enter your current password.");
+    if (next.length < 8) {
+      return setLocalError("Your new password needs at least 8 characters.");
+    }
+    if (next !== confirm) return setLocalError("The new passwords do not match.");
+    return change
+      .run()
+      .then(() => {
+        setCurrent("");
+        setNext("");
+        setConfirm("");
+        toast("Password changed");
+      })
+      .catch(() => {});
+  };
+
+  const error = localError || change.error?.message;
+
+  return (
+    <Panel
+      title="Password"
+      action={
+        <Btn icon="check" disabled={change.busy} onClick={submit}>
+          {change.busy ? "Changing..." : "Change password"}
+        </Btn>
+      }
+    >
+      <div className="dfield-2">
+        <label className="dfield">
+          <span>Current password</span>
+          <input
+            type="password"
+            value={current}
+            autoComplete="current-password"
+            onChange={(event) => setCurrent(event.target.value)}
+          />
+        </label>
+        <label className="dfield">
+          <span>New password</span>
+          <input
+            type="password"
+            value={next}
+            autoComplete="new-password"
+            onChange={(event) => setNext(event.target.value)}
+          />
+        </label>
+        <label className="dfield">
+          <span>Confirm new password</span>
+          <input
+            type="password"
+            value={confirm}
+            autoComplete="new-password"
+            onChange={(event) => setConfirm(event.target.value)}
+          />
+        </label>
+      </div>
+      {error ? <p className="dfield__error">{error}</p> : null}
+    </Panel>
+  );
+}
+
+/** Who else can get into the centre — the same staff list, read-only here. */
+function TeamTab() {
+  const call = useResource((signal) => api.listStaff({}, { signal }), []);
+  const staff = call.data || [];
+
+  if (call.loading) {
+    return (
+      <Panel title="Team access">
+        <Empty icon="users" title="Loading..." body="Fetching your team." />
+      </Panel>
+    );
+  }
+
+  if (call.error) {
+    return (
+      <Panel title="Team access">
+        <Empty
+          icon="alertTriangle"
+          title="Could not load your team"
+          body={call.error.message}
+          action={<Btn variant="outline" onClick={call.reload}>Try again</Btn>}
+        />
+      </Panel>
+    );
+  }
+
+  return (
+    <Panel
+      title="Team access"
+      sub="Everyone who can sign in to your centre"
+      action={
+        <Link className="dbtn dbtn--primary" to="/dashboard/staff">
+          Manage staff
+        </Link>
+      }
+    >
+      {staff.length === 0 ? (
+        <Empty
+          icon="userPlus"
+          title="Only you"
+          body="No caretakers have been added yet."
+          action={
+            <Link className="dbtn dbtn--primary" to="/dashboard/staff">
+              Add a caretaker
+            </Link>
+          }
+        />
+      ) : (
+        staff.map((person) => (
+          <div className="drow" key={person.id}>
+            <Who
+              name={person.full_name}
+              sub={`${person.job_title || "Caretaker"} · ${person.phone || ""}`}
+              size={34}
+            />
+            <strong style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {person.is_active === false ? (
+                <Tag tone="grey" dot>
+                  Suspended
+                </Tag>
+              ) : person.has_signed_in ? (
+                <Tag tone="green" dot>
+                  Signed in
+                </Tag>
+              ) : (
+                <Tag tone="amber" dot>
+                  Never signed in
+                </Tag>
+              )}
+            </strong>
+          </div>
+        ))
+      )}
+      <p className="muted" style={{ fontSize: 12.5, marginTop: 12 }}>
+        Caretakers sign in with their mobile number and a code. There are no
+        passwords to manage and no second owner account — everyone above sees
+        only the rooms they are assigned to.
+      </p>
+    </Panel>
+  );
+}
+
+/**
+ * Notifications.
+ *
+ * The in-app list is real — `GET /notifications` with a read receipt. What is
+ * NOT real, and is why this tab no longer has six switches: there is no
+ * preferences table. Nothing stores which categories an owner wants, or
+ * whether they want email or SMS. Those switches flipped, said "Preferences
+ * saved" and forgot, which would have had an owner believing they had turned
+ * something off.
+ */
+function NotificationsTab() {
+  const call = useResource(
+    (signal) => api.listNotifications({ per_page: 30 }, { signal }),
+    []
+  );
+  const items = call.data || [];
+
+  const markRead = useAction(() => api.markNotificationsRead(null));
+  const unread = items.filter((item) => !item.read_at).length;
+
+  return (
+    <>
+      <Panel
+        title="Your notifications"
+        sub={unread > 0 ? `${unread} unread` : "All read"}
+        action={
+          unread > 0 ? (
+            <Btn
+              variant="outline"
+              disabled={markRead.busy}
+              onClick={() =>
+                markRead
+                  .run()
+                  .then(call.reload)
+                  .catch(() => {})
+              }
+            >
+              {markRead.busy ? "Marking..." : "Mark all read"}
+            </Btn>
+          ) : null
+        }
+      >
+        {call.loading ? (
+          <Empty icon="bell" title="Loading..." body="Fetching your notifications." />
+        ) : call.error ? (
+          <Empty
+            icon="alertTriangle"
+            title="Could not load your notifications"
+            body={call.error.message}
+            action={<Btn variant="outline" onClick={call.reload}>Try again</Btn>}
+          />
+        ) : items.length === 0 ? (
+          <Empty
+            icon="bell"
+            title="Nothing yet"
+            body="Alerts about pickups, absences and your centre appear here."
+          />
+        ) : (
+          items.map((item) => (
+            <div className="drow" key={item.id}>
+              <span>
+                {item.read_at ? null : (
+                  <>
+                    <Tag tone="brand">New</Tag>{" "}
+                  </>
+                )}
+                {item.title}
+                <br />
+                <span className="muted" style={{ fontSize: 12.5 }}>
+                  {item.body}
+                </span>
+              </span>
+              <strong className="nowrap muted" style={{ fontSize: 12.5 }}>
+                {new Date(item.created_at).toLocaleString("en-IN", {
+                  day: "numeric",
+                  month: "short",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  timeZone: "Asia/Kolkata",
+                })}
+              </strong>
+            </div>
+          ))
+        )}
+      </Panel>
+
+      <Panel title="What you get told about">
+        <p className="muted" style={{ fontSize: 13.5 }}>
+          Kribble notifies you when a child is collected by someone not on
+          their authorised list, and when a parent reports an absence. These
+          cannot be turned off yet — there is nowhere to store the preference —
+          so you will receive all of them.
+        </p>
+      </Panel>
     </>
   );
 }
