@@ -81,6 +81,15 @@ export default function Overview() {
     [today]
   );
   const docsCall = useResource((signal) => api.listDocuments({ signal }), []);
+  // O1. Added for the two things nothing else on this page can see: incident
+  // reports waiting on the owner's signature, and which rooms have not opened
+  // the register at all. The older calls below stay because they also feed
+  // the charts and the lists, which the dashboard payload does not carry.
+  const dashCall = useResource(
+    (signal) => api.getDashboard({}, { signal }),
+    []
+  );
+
   const notifyCall = useResource(
     (signal) => api.listNotifications({ per_page: 6 }, { signal }),
     []
@@ -97,6 +106,7 @@ export default function Overview() {
     () => notifyCall.data || [],
     [notifyCall.data]
   );
+  const dash = dashCall.data || null;
 
   const onSite = records.filter(
     (record) => record.check_in_at && !record.check_out_at
@@ -144,6 +154,20 @@ export default function Overview() {
    */
   const attention = useMemo(() => {
     const items = [];
+
+    if (dash?.incidents_awaiting_review) {
+      items.push({
+        id: "incidents",
+        tone: "red",
+        icon: "alertTriangle",
+        title:
+          dash.incidents_awaiting_review === 1
+            ? "An incident report is waiting for you"
+            : `${dash.incidents_awaiting_review} incident reports are waiting for you`,
+        body: "A serious one cannot be signed off until the parent has been told.",
+        to: "/dashboard/incidents",
+      });
+    }
 
     const unauthorised = records.filter((r) => r.unauthorised_pickup);
     if (unauthorised.length) {
@@ -211,12 +235,15 @@ export default function Overview() {
     }
 
     if (unmarked.length && children.length) {
+      const rooms = dash?.rooms_not_marked || [];
       items.push({
         id: "unmarked",
         tone: "amber",
         icon: "checkSquare",
         title: `${unmarked.length} of ${children.length} children not marked today`,
-        body: "Nobody has recorded them — neither a caretaker nor their parent.",
+        body: rooms.length
+          ? `Nobody has opened the register in ${rooms.join(", ")}.`
+          : "Nobody has recorded them — neither a caretaker nor their parent.",
         to: "/dashboard/attendance",
       });
     }
@@ -254,7 +281,7 @@ export default function Overview() {
     }
 
     return items;
-  }, [records, children, staff, unmarked, care, documents]);
+  }, [records, children, staff, unmarked, care, documents, dash]);
 
   const loading =
     childrenCall.loading || registerCall.loading || staffCall.loading;

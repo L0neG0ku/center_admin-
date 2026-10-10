@@ -12,9 +12,10 @@ export const navGroups = [
     id: "care",
     label: "Children & care",
     items: [
-      { id: "children", label: "Children", icon: "baby", to: "/dashboard/children", count: 132 },
+      { id: "children", label: "Children", icon: "baby", to: "/dashboard/children" },
       { id: "attendance", label: "Attendance", icon: "checkSquare", to: "/dashboard/attendance" },
       { id: "daily-care", label: "Daily Care", icon: "heart", to: "/dashboard/daily-care" },
+      { id: "incidents", label: "Incidents", icon: "alertTriangle", to: "/dashboard/incidents" },
       { id: "activities", label: "Activities", icon: "palette", to: "/dashboard/activities" },
     ],
   },
@@ -22,9 +23,9 @@ export const navGroups = [
     id: "ops",
     label: "Operations",
     items: [
-      { id: "admissions", label: "Admissions", icon: "userPlus", to: "/dashboard/admissions", count: 6 },
+      { id: "admissions", label: "Admissions", icon: "userPlus", to: "/dashboard/admissions" },
       { id: "staff", label: "Staff", icon: "users", to: "/dashboard/staff" },
-      { id: "billing", label: "Billing", icon: "wallet", to: "/dashboard/billing", count: 9 },
+      { id: "billing", label: "Billing", icon: "wallet", to: "/dashboard/billing" },
     ],
   },
   {
@@ -45,7 +46,7 @@ export const navGroups = [
     label: "Your centre",
     items: [
       { id: "profile", label: "Centre Profile", icon: "building", to: "/dashboard/centre-profile" },
-      { id: "support", label: "Support", icon: "headset", to: "/dashboard/support", count: 2 },
+      { id: "support", label: "Support", icon: "headset", to: "/dashboard/support" },
       { id: "settings", label: "Settings", icon: "settings", to: "/dashboard/settings" },
     ],
   },

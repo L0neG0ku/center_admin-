@@ -1,261 +1,378 @@
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import Icon from "../../icons/Icon.jsx";
-import { Btn, Fact, PageHead, Search, Select, StatCard, Tag } from "../../components/dash/ui.jsx";
-import { Drawer, Modal } from "../../components/dash/Overlay.jsx";
+import {
+  Btn,
+  Empty,
+  PageHead,
+  Panel,
+  Select,
+  StatCard,
+  Tag,
+} from "../../components/dash/ui.jsx";
+import { Modal } from "../../components/dash/Overlay.jsx";
 import { useToast } from "../../components/dash/Toast.jsx";
-import { announcements, announcementTypes, audiences } from "../../data/dash/announcements.js";
+import * as api from "../../api/endpoints.js";
+import { useAction, useResource } from "../../api/useResource.js";
 
-const toneOf = (type) => announcementTypes.find((entry) => entry.id === type) || announcementTypes[0];
+/**
+ * Announcements, from `GET /daycares/me/announcements`.
+ *
+ * The number that makes this page worth opening twice is "read by 96 of 128".
+ * Both halves are facts about the moment it was sent: the backend resolves the
+ * audience into a stored list of people at send time, so the denominator does
+ * not drift as children join and leave. A recount against today's roster would
+ * make "read by 96 of 131" appear for a message only 128 people ever got.
+ *
+ * WHAT IS NOT HERE, because the API has none of it: scheduling for later,
+ * drafts, attachments, per-recipient delivery receipts, and edit-after-send.
+ * Withdrawing is the only way to take something back, and it deliberately
+ * leaves the record — a parent who already acted on "closed tomorrow"
+ * deserves the centre to still have what it told them.
+ */
+
+const KINDS = [
+  { value: "NOTICE", label: "Notice" },
+  { value: "HOLIDAY", label: "Holiday" },
+  { value: "EVENT", label: "Event" },
+  { value: "EMERGENCY", label: "Emergency" },
+];
+
+const KIND_TONE = {
+  NOTICE: "brand",
+  HOLIDAY: "amber",
+  EVENT: "green",
+  EMERGENCY: "red",
+};
+
+function newClientId() {
+  return crypto.randomUUID();
+}
 
 export default function Announcements() {
   const toast = useToast();
-  const [params, setParams] = useSearchParams();
-  const [list, setList] = useState(announcements);
-  const [query, setQuery] = useState("");
-  const [type, setType] = useState("");
-  const [selected, setSelected] = useState(null);
-  const [composing, setComposing] = useState(params.get("new") === "1");
-  const [draft, setDraft] = useState({ type: "Notice", audience: "All parents", title: "", body: "" });
+  const [composing, setComposing] = useState(false);
+  const [includeWithdrawn, setIncludeWithdrawn] = useState(false);
 
-  const rows = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return list.filter((item) => {
-      if (type && item.type !== type) return false;
-      return !needle || item.title.toLowerCase().includes(needle) || item.body.toLowerCase().includes(needle);
-    });
-  }, [list, query, type]);
+  const listCall = useResource(
+    (signal) =>
+      api.listAnnouncements(
+        { per_page: 50, include_withdrawn: includeWithdrawn },
+        { signal }
+      ),
+    [includeWithdrawn]
+  );
+  const roomsCall = useResource((signal) => api.listClassrooms({ signal }), []);
 
-  const closeCompose = () => {
-    setComposing(false);
-    if (params.get("new")) {
-      params.delete("new");
-      setParams(params, { replace: true });
+  const announcements = useMemo(() => listCall.data || [], [listCall.data]);
+  const rooms = useMemo(() => roomsCall.data || [], [roomsCall.data]);
+
+  const send = useAction((payload) => api.sendAnnouncement(payload));
+  const pin = useAction((id, on) => api.pinAnnouncement(id, on));
+  const withdraw = useAction((id) => api.withdrawAnnouncement(id));
+
+  const totals = useMemo(() => {
+    const live = announcements.filter((item) => !item.withdrawn_at);
+    const recipients = live.reduce(
+      (sum, item) => sum + (item.recipient_count || 0),
+      0
+    );
+    const reads = live.reduce((sum, item) => sum + (item.read_count || 0), 0);
+    return { sent: live.length, recipients, reads };
+  }, [announcements]);
+
+  async function handleSend(form) {
+    try {
+      await send.run(form);
+      setComposing(false);
+      listCall.reload();
+      toast.show("Announcement sent.");
+    } catch (error) {
+      toast.show(error?.message || "Could not send that.", "error");
     }
-  };
+  }
 
-  const send = () => {
-    const meta = toneOf(draft.type);
-    setList((current) => [
-      {
-        id: `ANN-${513 + current.length}`,
-        type: draft.type,
-        title: draft.title || "Untitled announcement",
-        body: draft.body,
-        audience: draft.audience,
-        sentOn: new Date(),
-        sentLabel: "Just now",
-        by: "Deepa Menon",
-        reach: draft.audience === "All parents" ? 128 : 32,
-        read: 0,
-        pinned: meta.id === "Emergency",
-      },
-      ...current,
-    ]);
-    setDraft({ type: "Notice", audience: "All parents", title: "", body: "" });
-    closeCompose();
-    toast("Announcement sent to parents");
-  };
+  async function handlePin(item) {
+    try {
+      await pin.run(item.id, !item.is_pinned);
+      listCall.reload();
+    } catch (error) {
+      toast.show(error?.message || "Could not pin that.", "error");
+    }
+  }
+
+  async function handleWithdraw(item) {
+    if (
+      !window.confirm(
+        `Withdraw "${item.title}"? It leaves every parent's feed. The record ` +
+          `of having sent it stays.`
+      )
+    ) {
+      return;
+    }
+    try {
+      await withdraw.run(item.id);
+      listCall.reload();
+      toast.show("Withdrawn.");
+    } catch (error) {
+      toast.show(error?.message || "Could not withdraw that.", "error");
+    }
+  }
 
   return (
     <>
-      <PageHead title="Announcements" sub="Notices, holidays, events and emergency alerts">
-        <Btn icon="megaphone" onClick={() => setComposing(true)}>
+      <PageHead
+        title="Announcements"
+        sub="What you have told families, and who has read it."
+      >
+        <Btn icon="plus" onClick={() => setComposing(true)}>
           New announcement
         </Btn>
       </PageHead>
 
-      <div className="stats">
-        <StatCard icon="megaphone" tone="brand" label="Sent this month" value={list.length} />
-        <StatCard icon="users" tone="blue" label="Parents reached" value={128} />
+      <div className="stats" style={{ marginBottom: 18 }}>
+        <StatCard icon="megaphone" label="Sent" value={totals.sent} />
         <StatCard
-          icon="checkCircle"
+          icon="users"
+          tone="brand"
+          label="People reached"
+          value={totals.recipients}
+        />
+        <StatCard
+          icon="checkSquare"
           tone="green"
-          label="Average read rate"
-          value={`${Math.round((list.reduce((sum, item) => sum + item.read / item.reach, 0) / list.length) * 100)}%`}
+          label="Reads"
+          value={totals.reads}
         />
-        <StatCard icon="alertTriangle" tone="red" label="Emergency alerts" value={list.filter((item) => item.type === "Emergency").length} />
       </div>
 
-      <div className="toolbar">
-        <Search value={query} onChange={setQuery} placeholder="Search announcements..." />
-        <Select
-          value={type}
-          onChange={setType}
-          options={announcementTypes.map((entry) => entry.id)}
-          placeholder="All types"
-        />
-        <div className="toolbar__spacer" />
-        <span className="muted" style={{ fontSize: 13 }}>
-          {rows.length} announcements
-        </span>
-      </div>
-
-      <ul className="annlist">
-        {rows.map((item) => {
-          const meta = toneOf(item.type);
-          const readPercent = Math.round((item.read / item.reach) * 100);
-          return (
-            <li key={item.id}>
-              <button type="button" className="anncard" onClick={() => setSelected(item)}>
-                <span className={`anncard__icon tone-${meta.tone}`}>
-                  <Icon name={meta.icon} size={20} />
-                </span>
-                <div className="anncard__body">
-                  <div className="anncard__head">
-                    <strong>{item.title}</strong>
-                    {item.pinned ? <Tag tone="red">Pinned</Tag> : null}
-                    <Tag tone={meta.tone}>{item.type}</Tag>
-                  </div>
-                  <p>{item.body}</p>
-                  <div className="anncard__meta">
-                    <span>
-                      <Icon name="users" size={14} /> {item.audience}
-                    </span>
-                    <span>
-                      <Icon name="clock" size={14} /> {item.sentLabel}
-                    </span>
-                    <span>
-                      <Icon name="eye" size={14} /> {item.read}/{item.reach} read ({readPercent}%)
-                    </span>
-                  </div>
-                </div>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-
-      {selected ? (
-        <Drawer
-          title={selected.title}
-          sub={`${selected.type} · ${selected.sentLabel}`}
-          onClose={() => setSelected(null)}
-          footer={
-            <>
-              <Btn variant="outline" icon="refresh" onClick={() => toast("Announcement resent")}>
-                Resend
-              </Btn>
-              <Btn variant="danger" onClick={() => { setList((c) => c.filter((i) => i.id !== selected.id)); setSelected(null); toast("Announcement deleted"); }}>
-                Delete
-              </Btn>
-            </>
-          }
-        >
-          <section className="dsec">
-            <p className="note-box">{selected.body}</p>
-          </section>
-
-          <section className="dsec">
-            <h3>Delivery</h3>
-            <div className="dgrid">
-              <Fact label="Audience" value={selected.audience} />
-              <Fact label="Sent by" value={selected.by} />
-              <Fact label="Sent" value={selected.sentLabel} />
-              <Fact label="Type" value={selected.type} />
-            </div>
-          </section>
-
-          <section className="dsec">
-            <h3>Read receipts</h3>
-            <div className="ring-stat">
-              <strong>{Math.round((selected.read / selected.reach) * 100)}%</strong>
-              <span>
-                {selected.read} of {selected.reach} parents opened this
-              </span>
-            </div>
-            <div className="dbar" style={{ marginTop: 8 }}>
-              <span style={{ width: `${(selected.read / selected.reach) * 100}%` }} />
-            </div>
-            {selected.read < selected.reach ? (
-              <Btn
-                variant="soft"
-                icon="send"
-                className="dbtn--block"
-                style={{ marginTop: 18 }}
-                onClick={() => toast("Nudge sent to parents who haven't read it")}
-              >
-                Nudge the {selected.reach - selected.read} who haven't read it
-              </Btn>
-            ) : null}
-          </section>
-        </Drawer>
-      ) : null}
-
-      {composing ? (
-        <Modal
-          title="New announcement"
-          sub="This lands in every selected parent's app straight away."
-          onClose={closeCompose}
-          size="lg"
-          footer={
-            <>
-              <Btn variant="outline" onClick={closeCompose}>
-                Cancel
-              </Btn>
-              <Btn icon="send" onClick={send}>
-                Send now
-              </Btn>
-            </>
-          }
-        >
-          <label className="dfield">
-            <span>Type</span>
-            <div className="segrow segrow--wide">
-              {announcementTypes.map((entry) => (
-                <button
-                  key={entry.id}
-                  type="button"
-                  className={`seg ${draft.type === entry.id ? `is-on seg--${entry.tone}` : ""}`.trim()}
-                  onClick={() => setDraft({ ...draft, type: entry.id })}
-                >
-                  <Icon name={entry.icon} size={15} />
-                  {entry.id}
-                </button>
-              ))}
-            </div>
-          </label>
-
-          <label className="dfield">
-            <span>Send to</span>
-            <select
-              value={draft.audience}
-              onChange={(event) => setDraft({ ...draft, audience: event.target.value })}
-            >
-              {audiences.map((audience) => (
-                <option key={audience}>{audience}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="dfield">
-            <span>Title</span>
+      <Panel
+        title="Sent"
+        tools={
+          <label style={{ cursor: "pointer", fontSize: 13 }}>
             <input
-              value={draft.title}
-              placeholder="e.g. Centre closed on 15 August"
-              onChange={(event) => setDraft({ ...draft, title: event.target.value })}
-            />
+              type="checkbox"
+              checked={includeWithdrawn}
+              onChange={(event) => setIncludeWithdrawn(event.target.checked)}
+            />{" "}
+            Show withdrawn
           </label>
+        }
+      >
+        {listCall.loading ? (
+          <p className="note-box">Loading…</p>
+        ) : listCall.error ? (
+          <p className="note-box" style={{ borderColor: "var(--danger)" }}>
+            {listCall.error.message}{" "}
+            <button type="button" onClick={listCall.reload}>
+              Try again
+            </button>
+          </p>
+        ) : announcements.length === 0 ? (
+          <Empty
+            icon="megaphone"
+            title="Nothing sent yet"
+            body="Closures, holidays and reminders all land in every parent's app."
+          />
+        ) : (
+          <div className="annlist">
+            {announcements.map((item) => (
+              <AnnouncementRow
+                key={item.id}
+                item={item}
+                busy={pin.busy || withdraw.busy}
+                onPin={() => handlePin(item)}
+                onWithdraw={() => handleWithdraw(item)}
+              />
+            ))}
+          </div>
+        )}
+      </Panel>
 
-          <label className="dfield">
-            <span>Message</span>
-            <textarea
-              value={draft.body}
-              placeholder="Keep it short — parents read this on their phone."
-              onChange={(event) => setDraft({ ...draft, body: event.target.value })}
-            />
-            <small>{draft.body.length} characters</small>
-          </label>
-
-          {draft.type === "Emergency" ? (
-            <p className="note-box note-box--warn">
-              <Icon name="alertTriangle" size={16} />
-              Emergency alerts push a notification even if a parent has muted the app. Use them only for
-              safety or closure notices.
-            </p>
-          ) : null}
-        </Modal>
-      ) : null}
+      {composing && (
+        <Compose
+          rooms={rooms}
+          busy={send.busy}
+          onClose={() => setComposing(false)}
+          onSend={handleSend}
+        />
+      )}
     </>
+  );
+}
+
+function AnnouncementRow({ item, busy, onPin, onWithdraw }) {
+  const total = item.recipient_count || 0;
+  const read = item.read_count || 0;
+  const percent = total ? Math.round((read / total) * 100) : 0;
+
+  return (
+    <article
+      className="annrow"
+      style={
+        item.withdrawn_at
+          ? { opacity: 0.6 }
+          : item.kind === "EMERGENCY"
+            ? { borderColor: "var(--danger)" }
+            : undefined
+      }
+    >
+      <div className="annrow__main">
+        <div className="annrow__head">
+          {item.is_pinned && <Icon name="star" size={14} />}
+          <strong>{item.title}</strong>
+          <Tag tone={KIND_TONE[item.kind] || "grey"}>
+            {KINDS.find((k) => k.value === item.kind)?.label || item.kind}
+          </Tag>
+          {item.withdrawn_at && <Tag tone="grey">Withdrawn</Tag>}
+        </div>
+        <p className="annrow__body">{item.body}</p>
+        <p className="annrow__meta">
+          {new Date(item.published_at).toLocaleString("en-IN", {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: "Asia/Kolkata",
+          })}
+          {" · "}
+          {item.audience === "CLASSROOM"
+            ? item.classroom_name || "One room"
+            : item.audience === "ALL_STAFF"
+              ? "Staff"
+              : "All parents"}
+          {item.author && ` · ${item.author.name}`}
+        </p>
+      </div>
+
+      <div className="annrow__side">
+        {/* Zero recipients is said rather than shown as 0%: it means nobody
+            was in the audience, usually a room whose parents have not joined,
+            which is a different problem from nobody reading it. */}
+        <strong>
+          {total === 0 ? "No recipients" : `Read by ${read} of ${total}`}
+        </strong>
+        {total > 0 && (
+          <div className="annrow__bar">
+            <span style={{ width: `${percent}%` }} />
+          </div>
+        )}
+        {!item.withdrawn_at && (
+          <div className="annrow__actions">
+            <button type="button" disabled={busy} onClick={onPin}>
+              {item.is_pinned ? "Unpin" : "Pin"}
+            </button>
+            <button type="button" disabled={busy} onClick={onWithdraw}>
+              Withdraw
+            </button>
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function Compose({ rooms, busy, onClose, onSend }) {
+  const [kind, setKind] = useState("NOTICE");
+  const [audience, setAudience] = useState("ALL_PARENTS");
+  const [classroomId, setClassroomId] = useState("");
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+
+  const valid =
+    title.trim().length >= 3 &&
+    body.trim().length > 0 &&
+    (audience !== "CLASSROOM" || classroomId);
+
+  return (
+    <Modal
+      title="New announcement"
+      sub="It lands in every recipient's app straight away."
+      onClose={onClose}
+      footer={
+        <>
+          <Btn variant="outline" onClick={onClose}>
+            Cancel
+          </Btn>
+          <Btn
+            icon="send"
+            disabled={!valid || busy}
+            onClick={() =>
+              onSend({
+                client_id: newClientId(),
+                kind,
+                audience,
+                classroom_id: audience === "CLASSROOM" ? classroomId : null,
+                title: title.trim(),
+                body: body.trim(),
+              })
+            }
+          >
+            {busy ? "Sending..." : "Send"}
+          </Btn>
+        </>
+      }
+    >
+      <div>
+        <label className="dfield">
+          <span>Kind</span>
+          <Select value={kind} onChange={setKind} options={KINDS} />
+        </label>
+
+        <label className="dfield">
+          <span>Who gets it</span>
+          <Select
+            value={audience}
+            onChange={setAudience}
+            options={[
+              { value: "ALL_PARENTS", label: "All parents" },
+              { value: "CLASSROOM", label: "One room's parents" },
+              { value: "ALL_STAFF", label: "All staff" },
+            ]}
+          />
+        </label>
+
+        {audience === "CLASSROOM" && (
+          <label className="dfield">
+            <span>Which room</span>
+            <Select
+              value={classroomId}
+              onChange={setClassroomId}
+              placeholder="Choose a room"
+              options={rooms.map((room) => ({
+                value: room.id,
+                label: room.name,
+              }))}
+            />
+          </label>
+        )}
+
+        <label className="dfield">
+          <span>Title</span>
+          <input
+            value={title}
+            maxLength={200}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Centre closed tomorrow"
+          />
+        </label>
+
+        <label className="dfield">
+          <span>Message</span>
+          <textarea
+            value={body}
+            rows={6}
+            maxLength={8000}
+            onChange={(event) => setBody(event.target.value)}
+            placeholder="A burst pipe in the kitchen. We will update you by 6pm."
+          />
+        </label>
+
+        {kind === "EMERGENCY" && (
+          <p className="note-box" style={{ borderColor: "var(--danger)" }}>
+            <Icon name="alertTriangle" size={15} /> An emergency announcement
+            goes to the top of every parent&apos;s feed, above anything pinned.
+          </p>
+        )}
+
+      </div>
+    </Modal>
   );
 }

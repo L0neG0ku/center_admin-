@@ -1417,3 +1417,188 @@
     font-size: 23px;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Announcements — a sent list where the read count is the point.
+   --------------------------------------------------------------------------- */
+
+.annlist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.annrow {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+}
+
+.annrow__main {
+  flex: 1;
+  min-width: 0;
+}
+
+.annrow__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.annrow__body {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  color: var(--ink-700);
+  /* Three lines in the list; the whole thing is in the parent's app, which is
+     where it matters. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.annrow__meta {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-400);
+}
+
+.annrow__side {
+  width: 190px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 12.5px;
+  color: var(--ink-700);
+}
+
+.annrow__bar {
+  height: 6px;
+  margin: 6px 0 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.annrow__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand-500);
+}
+
+.annrow__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.annrow__actions button {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--brand-600);
+  cursor: pointer;
+}
+
+.annrow__actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 720px) {
+  .annrow {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .annrow__side {
+    width: 100%;
+    text-align: left;
+  }
+
+  .annrow__actions {
+    justify-content: flex-start;
+  }
+}
+
+/* A page whose feature does not exist yet — see NotBuilt.jsx. */
+
+.notbuilt {
+  padding: 44px 28px;
+  text-align: center;
+  color: var(--ink-400);
+}
+
+.notbuilt h3 {
+  margin: 12px 0 6px;
+  font-size: 16px;
+  color: var(--ink-900);
+}
+
+.notbuilt p {
+  margin: 0 auto 8px;
+  max-width: 460px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.notbuilt__instead {
+  color: var(--ink-700);
+}
+
+.notbuilt__when {
+  font-size: 12.5px;
+}
+
+/* A second panel stacked under the first. */
+.mt {
+  margin-top: 18px;
+}
+
+/* The recent-activity trail on Reports — a list of who did what, when. */
+
+.actlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.actlist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--ink-700);
+}
+
+.actlist li:last-child {
+  border-bottom: 0;
+}
+
+.actlist li > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.actlist li > em {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--ink-400);
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .actlist li {
+    flex-wrap: wrap;
+  }
+}

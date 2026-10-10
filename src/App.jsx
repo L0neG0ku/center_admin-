@@ -12,6 +12,7 @@ import DashLayout from "./components/dash/DashLayout.jsx";
 import Overview from "./pages/dashboard/Overview.jsx";
 import Children from "./pages/dashboard/Children.jsx";
 import Attendance from "./pages/dashboard/Attendance.jsx";
+import Incidents from "./pages/dashboard/Incidents.jsx";
 import DailyCare from "./pages/dashboard/DailyCare.jsx";
 import Activities from "./pages/dashboard/Activities.jsx";
 import Staff from "./pages/dashboard/Staff.jsx";
@@ -60,6 +61,7 @@ export default function App() {
         <Route index element={<Overview />} />
         <Route path="children" element={<Children />} />
         <Route path="attendance" element={<Attendance />} />
+        <Route path="incidents" element={<Incidents />} />
         <Route path="daily-care" element={<DailyCare />} />
         <Route path="activities" element={<Activities />} />
         <Route path="admissions" element={<Admissions />} />

@@ -348,3 +348,67 @@ export const listNotifications = (params, options) =>
 
 export const markNotificationsRead = (ids) =>
   post("/notifications/read", { notification_ids: ids ?? null });
+
+/* The owner's home, in one call.
+
+   O1 replaces the four requests Overview used to make — the register, the
+   roster, the care-log summary and the staff list — which raced each other
+   and could disagree about what "today" was. */
+
+export const getDashboard = (params, options) =>
+  get(`/daycares/me/dashboard${query(params)}`, options);
+
+/* O2 — recent activity, read from the audit trail.
+
+   Scoped by actor, so it shows what this centre's own people did. A parent's
+   actions are not in it: audit_logs has no daycare_id to filter on. */
+
+export const getCentreActivity = (params, options) =>
+  get(`/daycares/me/activity${query(params)}`, options);
+
+/* Incidents — the safeguarding record.
+
+   There is no delete, for anyone. Signing one off freezes it, and a SERIOUS
+   incident is refused sign-off until the record shows the parent was told. */
+
+export const listIncidents = (params, options) =>
+  get(`/daycares/me/incidents${query(params)}`, options);
+
+export const getIncident = (id, options) =>
+  get(`/daycares/me/incidents/${id}`, options);
+
+export const reviewIncident = (id, payload) =>
+  post(`/daycares/me/incidents/${id}/review`, payload);
+
+/* Announcements.
+
+   The audience is resolved to people when it is sent, so read_count and
+   recipient_count are both facts about that moment rather than a recount
+   against today's roster. */
+
+export const listAnnouncements = (params, options) =>
+  get(`/daycares/me/announcements${query(params)}`, options);
+
+export const sendAnnouncement = (payload) =>
+  post("/daycares/me/announcements", payload);
+
+export const pinAnnouncement = (id, isPinned) =>
+  patch(`/daycares/me/announcements/${id}`, { is_pinned: isPinned });
+
+export const withdrawAnnouncement = (id) =>
+  del(`/daycares/me/announcements/${id}`);
+
+/* Events and who has replied. */
+
+export const listEvents = (params, options) =>
+  get(`/daycares/me/events${query(params)}`, options);
+
+export const createEvent = (payload) => post("/daycares/me/events", payload);
+
+export const updateEvent = (id, changed) =>
+  patch(`/daycares/me/events/${id}`, changed);
+
+export const deleteEvent = (id) => del(`/daycares/me/events/${id}`);
+
+export const getEventRsvps = (id, options) =>
+  get(`/daycares/me/events/${id}/rsvps`, options);
