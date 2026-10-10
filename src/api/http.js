@@ -262,4 +262,7 @@ function unwrap(parsed) {
 export const get = (path, options) => request(path, { ...options, method: "GET" });
 export const post = (path, body, options) => request(path, { ...options, method: "POST", body });
 export const patch = (path, body, options) => request(path, { ...options, method: "PATCH", body });
+// PUT, not PATCH: the staff-classrooms and daily-menu endpoints REPLACE
+// the whole value rather than merging into it.
+export const put = (path, body, options) => request(path, { ...options, method: "PUT", body });
 export const del = (path, options) => request(path, { ...options, method: "DELETE" });
