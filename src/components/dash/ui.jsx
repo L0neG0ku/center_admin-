@@ -226,14 +226,25 @@ export function Search({ value, onChange, placeholder = "Search..." }) {
   );
 }
 
+/**
+ * `options` takes either plain strings, where the value and the label are the
+ * same, or `{ value, label }` for the cases where they differ — filtering by
+ * a classroom id while showing its name, say.
+ */
 export function Select({ value, onChange, options, placeholder }) {
+  const entries = options.map((option) =>
+    typeof option === "string" || typeof option === "number"
+      ? { value: String(option), label: String(option) }
+      : option
+  );
+
   return (
     <div className="tselect">
       <select value={value} onChange={(event) => onChange(event.target.value)}>
         {placeholder ? <option value="">{placeholder}</option> : null}
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
+        {entries.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>

@@ -57,6 +57,232 @@
   color: var(--brand-600);
 }
 
+/* A row of chips used as a multi-select: which rooms a caretaker covers,
+   which children an activity tagged. Selected state is the brand tint, so
+   "on" reads at a glance across a long list. */
+.dchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dchip {
+  cursor: pointer;
+}
+
+.dchip.is-on {
+  border-color: var(--brand-500);
+  background: var(--brand-50);
+  color: var(--brand-700);
+  font-weight: 600;
+}
+
+/* A label above a control that is not a single <input>, so it cannot sit
+   inside the <label> the .dfield pattern uses. */
+.dfield__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-700);
+  margin-bottom: 2px;
+}
+
+/* Validation and API errors, under the field or the form. */
+.dfield__error {
+  display: block;
+  margin-top: 5px;
+  font-size: 12.5px;
+  color: var(--danger);
+}
+
+/* A grid of per-child summary cards: the daily-care page shows one per child
+   with a count per kind, rather than a table, because the interesting content
+   is a handful of tags rather than aligned columns. */
+.carecards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.carecard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.carecard:hover {
+  border-color: var(--brand-300);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 5%);
+}
+
+.carecard__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.carecard__who {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.carecard__who strong {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.carecard__who .muted {
+  font-size: 12.5px;
+}
+
+.carecard__kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Verification stages, from GET /daycares/me/verification-status. A completed
+   stage gets the brand dot and a solid connector; one still in progress stays
+   grey so the owner can see where the application actually is. */
+.vtimeline {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+}
+
+.vtimeline li {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 18px;
+}
+
+.vtimeline li:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  bottom: 0;
+  left: 10px;
+  width: 2px;
+  background: var(--line);
+}
+
+.vtimeline li.is-done:not(:last-child)::before {
+  background: var(--brand-300);
+}
+
+.vtimeline__dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--ink-500);
+  border: 1px solid var(--line-strong);
+}
+
+.vtimeline li.is-done .vtimeline__dot {
+  background: var(--brand-50);
+  border-color: var(--brand-500);
+  color: var(--brand-700);
+}
+
+.vtimeline__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+
+.vtimeline__body strong {
+  font-weight: 600;
+}
+
+/* Two panels side by side, stacking on narrow screens. */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+/* A row in the dashboard's "Needs your attention" list. Each one is a link
+   straight to the page that fixes it — the point of the panel is that the
+   owner can act, not just be informed. */
+.attnrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+}
+
+.attnrow:last-child {
+  border-bottom: 0;
+}
+
+.attnrow:hover .attnrow__body strong {
+  color: var(--brand-700);
+}
+
+.attnrow__icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+}
+
+.attnrow__icon--red {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.attnrow__icon--amber {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.attnrow__icon--blue {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.attnrow__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.attnrow__body strong {
+  font-weight: 600;
+}
+
+.attnrow__body .muted {
+  font-size: 12.5px;
+}
+
 /* ---------- Buttons (dashboard scope) ---------- */
 .dbtn {
   display: inline-flex;

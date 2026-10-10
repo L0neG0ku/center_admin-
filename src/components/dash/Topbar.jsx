@@ -3,11 +3,21 @@ import { useNavigate } from "react-router-dom";
 import Icon from "../../icons/Icon.jsx";
 import { Avatar } from "./ui.jsx";
 import { quickActions } from "./nav.js";
-import {
-  formatRupees,
-  notifications,
-  walletSummary,
-} from "../../data/dash/overview.js";
+import * as api from "../../api/endpoints.js";
+import { useAction, useResource } from "../../api/useResource.js";
+
+/*
+ * THE WALLET IS GONE. The topbar showed "Wallet ₹2,48,500" with a dropdown
+ * breaking it into pending fees, the last payout and the next payout date —
+ * on every page of the dashboard. None of it exists: there are no billing,
+ * invoice or payout endpoints, and no money moves through Kribble at all. A
+ * bank balance is the single worst thing to invent, because an owner will
+ * plan around it.
+ *
+ * The bell is now real: GET /notifications with the unread count, and
+ * POST /notifications/read behind "Mark all read". The hardcoded "4" badge
+ * and the five scripted alerts are gone with it.
+ */
 
 /** Closes a dropdown when you click anywhere else. */
 function useOutside(onClose) {
@@ -66,79 +76,6 @@ export default function Topbar({ onBurger, user, onSignOut }) {
 
       <div className="dtop__right">
         <div className="dtop__wrap">
-          <button
-            type="button"
-            className="dtop__wallet"
-            onClick={() => toggle("wallet")}
-            aria-label={`Wallet balance ${walletSummary.currency}${formatRupees(
-              walletSummary.balance
-            )}`}
-          >
-            <span className="dtop__wallet-icon">
-              <Icon name="wallet" size={16} />
-            </span>
-            <span className="dtop__wallet-text">
-              <small>Wallet</small>
-              <strong>
-                {walletSummary.currency}
-                {formatRupees(walletSummary.balance)}
-              </strong>
-            </span>
-            <Icon name="chevronDown" size={14} className="muted" />
-          </button>
-
-          <Dropdown open={menu === "wallet"} onClose={close}>
-            <div className="dmenu__head">
-              <strong>Wallet</strong>
-            </div>
-
-            <div className="dwallet">
-              <p className="dwallet__label">Available balance</p>
-              <p className="dwallet__balance">
-                {walletSummary.currency}
-                {formatRupees(walletSummary.balance)}
-              </p>
-
-              <div className="dwallet__rows">
-                <div>
-                  <span>Pending from parents</span>
-                  <strong>
-                    {walletSummary.currency}
-                    {formatRupees(walletSummary.pending)}
-                    <small> · {walletSummary.pendingCount} fees</small>
-                  </strong>
-                </div>
-                <div>
-                  <span>Last payout</span>
-                  <strong>
-                    {walletSummary.currency}
-                    {formatRupees(walletSummary.lastPayout.amount)}
-                    <small> · {walletSummary.lastPayout.at}</small>
-                  </strong>
-                </div>
-                <div>
-                  <span>Next payout</span>
-                  <strong>{walletSummary.nextPayout}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div className="dmenu__split" />
-            <button
-              type="button"
-              className="dmenu__item"
-              onClick={() => go("/dashboard/billing")}
-            >
-              <Icon name="receipt" size={18} />
-              <span>
-                Go to billing
-                <small>Invoices, payouts and fee reminders</small>
-              </span>
-            </button>
-          </Dropdown>
-        </div>
-
-        <div className="dtop__wrap">
           <button type="button" className="dtop__quick" onClick={() => toggle("quick")}>
             <Icon name="zap" size={16} />
             <span>Quick Actions</span>
@@ -166,40 +103,12 @@ export default function Topbar({ onBurger, user, onSignOut }) {
           </Dropdown>
         </div>
 
-        <div className="dtop__wrap">
-          <button
-            type="button"
-            className="dtop__icon"
-            onClick={() => toggle("bell")}
-            aria-label="Notifications"
-          >
-            <Icon name="bell" size={20} />
-            <span className="dtop__dot dtop__dot--brand">4</span>
-          </button>
-
-          <Dropdown open={menu === "bell"} onClose={close} wide>
-            <div className="dmenu__head">
-              <strong>Notifications</strong>
-              <span>Mark all read</span>
-            </div>
-            {notifications.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="dmenu__item"
-                onClick={() => go(item.to)}
-              >
-                <Icon name={item.icon} size={18} />
-                <span>
-                  {item.title}
-                  <small>
-                    {item.body} · {item.at}
-                  </small>
-                </span>
-              </button>
-            ))}
-          </Dropdown>
-        </div>
+        <NotificationBell
+          open={menu === "bell"}
+          onToggle={() => toggle("bell")}
+          onClose={close}
+          Dropdown={Dropdown}
+        />
 
         <div className="dtop__wrap">
           <button
@@ -249,5 +158,101 @@ export default function Topbar({ onBurger, user, onSignOut }) {
         </div>
       </div>
     </header>
+  );
+}
+
+/**
+ * The notification bell, on `GET /notifications`.
+ *
+ * The badge counts unread rows rather than showing a constant. "Mark all
+ * read" posts to `/notifications/read` with no ids, which the API treats as
+ * "all of them", then refetches so the badge actually clears.
+ */
+function NotificationBell({ open, onToggle, onClose, Dropdown }) {
+  const call = useResource(
+    (signal) => api.listNotifications({ per_page: 8 }, { signal }),
+    []
+  );
+  const markRead = useAction(() => api.markNotificationsRead(null));
+
+  const items = call.data || [];
+  const unread = items.filter((item) => !item.read_at).length;
+
+  return (
+    <div className="dtop__wrap">
+      <button
+        type="button"
+        className="dtop__icon"
+        onClick={onToggle}
+        aria-label={
+          unread > 0 ? `Notifications, ${unread} unread` : "Notifications"
+        }
+      >
+        <Icon name="bell" size={20} />
+        {unread > 0 ? (
+          <span className="dtop__dot dtop__dot--brand">{unread}</span>
+        ) : null}
+      </button>
+
+      <Dropdown open={open} onClose={onClose} wide>
+        <div className="dmenu__head">
+          <strong>Notifications</strong>
+          {unread > 0 ? (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                markRead
+                  .run()
+                  .then(call.reload)
+                  .catch(() => {})
+              }
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  markRead
+                    .run()
+                    .then(call.reload)
+                    .catch(() => {});
+                }
+              }}
+            >
+              {markRead.busy ? "Marking..." : "Mark all read"}
+            </span>
+          ) : null}
+        </div>
+
+        {call.loading ? (
+          <div className="dmenu__item">
+            <span>Loading...</span>
+          </div>
+        ) : call.error ? (
+          <div className="dmenu__item">
+            <Icon name="alertTriangle" size={18} />
+            <span>
+              Could not load notifications
+              <small>{call.error.message}</small>
+            </span>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="dmenu__item">
+            <Icon name="bell" size={18} />
+            <span>
+              Nothing yet
+              <small>Pickup and absence alerts appear here.</small>
+            </span>
+          </div>
+        ) : (
+          items.map((item) => (
+            <div className="dmenu__item" key={item.id}>
+              <Icon name={item.read_at ? "bell" : "alertCircle"} size={18} />
+              <span>
+                {item.title}
+                <small>{item.body}</small>
+              </span>
+            </div>
+          ))
+        )}
+      </Dropdown>
+    </div>
   );
 }
