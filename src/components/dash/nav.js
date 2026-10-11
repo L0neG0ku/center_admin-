@@ -15,10 +15,12 @@ export const navGroups = [
       { id: "children", label: "Children", icon: "baby", to: "/dashboard/children" },
       { id: "attendance", label: "Attendance", icon: "checkSquare", to: "/dashboard/attendance" },
       { id: "daily-care", label: "Daily Care", icon: "heart", to: "/dashboard/daily-care" },
+      { id: "meal-schedule", label: "Mealtimes", icon: "utensils", to: "/dashboard/meal-schedule" },
       { id: "medicine", label: "Medicine", icon: "heart", to: "/dashboard/medicine" },
       { id: "incidents", label: "Incidents", icon: "alertTriangle", to: "/dashboard/incidents" },
       { id: "emergencies", label: "Emergencies", icon: "shield", to: "/dashboard/emergencies" },
       { id: "activities", label: "Activities", icon: "palette", to: "/dashboard/activities" },
+      { id: "observations", label: "Observations", icon: "bookOpen", to: "/dashboard/observations" },
     ],
   },
   {

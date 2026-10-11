@@ -487,3 +487,43 @@ export const completeMeeting = (id, outcome) =>
 
 export const listDoses = (params, options) =>
   get(`/daycares/me/doses${query(params)}`, options);
+
+/* Learning observations.
+
+   Counts, never scores. The API stores no rating, level or percentage against
+   any development area, and nothing built on it may present a count as a
+   judgement about a child — "five notes about talking" is a fact about what
+   the centre wrote down.
+
+   An owner can remove any observation. That is a deliberate difference from
+   incidents and doses, which nobody can delete: this is pedagogy, not
+   safeguarding, and a note about the wrong child is not evidence of
+   anything. */
+
+export const listObservations = (params, options) =>
+  get(`/daycares/me/observations${query(params)}`, options);
+
+export const deleteObservation = (id) =>
+  del(`/daycares/me/observations/${id}`);
+
+/* The meal schedule.
+
+   This exists so an unlogged meal can be told from one that was never served.
+   The parent's app used to draw a fixed Breakfast/Lunch/Snack frame and grey
+   out whatever had no log, which reads as "offered and refused" — and at a
+   centre serving no breakfast, invented a meal outright.
+
+   Two rules carry into the UI:
+
+   * A room's slots REPLACE the centre's entirely; they are never merged. A
+     room that sets its own times has a different day, usually because the
+     babies eat earlier, and a merged timetable is one nobody runs.
+   * PUT replaces the whole set. Send every slot that should exist, not a
+     delta — the API has no per-slot route, deliberately, because a schedule
+     is read as a whole. */
+
+export const listMealSlots = (options) =>
+  get("/daycares/me/meal-slots", options);
+
+export const putMealSlots = (slots) =>
+  put("/daycares/me/meal-slots", { slots });

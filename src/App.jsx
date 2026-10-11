@@ -27,6 +27,8 @@ import Support from "./pages/dashboard/Support.jsx";
 import CentreProfile from "./pages/dashboard/CentreProfile.jsx";
 import Settings from "./pages/dashboard/Settings.jsx";
 import Medicine from "./pages/dashboard/Medicine.jsx";
+import Observations from "./pages/dashboard/Observations.jsx";
+import MealSchedule from "./pages/dashboard/MealSchedule.jsx";
 import "./App.css";
 
 /**
@@ -78,6 +80,8 @@ export default function App() {
         <Route path="support" element={<Support />} />
         <Route path="centre-profile" element={<CentreProfile />} />
         <Route path="medicine" element={<Medicine />} />
+        <Route path="observations" element={<Observations />} />
+        <Route path="meal-schedule" element={<MealSchedule />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 
