@@ -13,6 +13,8 @@ import Overview from "./pages/dashboard/Overview.jsx";
 import Children from "./pages/dashboard/Children.jsx";
 import Attendance from "./pages/dashboard/Attendance.jsx";
 import Incidents from "./pages/dashboard/Incidents.jsx";
+import Emergencies from "./pages/dashboard/Emergencies.jsx";
+import Meetings from "./pages/dashboard/Meetings.jsx";
 import DailyCare from "./pages/dashboard/DailyCare.jsx";
 import Activities from "./pages/dashboard/Activities.jsx";
 import Staff from "./pages/dashboard/Staff.jsx";
@@ -24,6 +26,7 @@ import Reports from "./pages/dashboard/Reports.jsx";
 import Support from "./pages/dashboard/Support.jsx";
 import CentreProfile from "./pages/dashboard/CentreProfile.jsx";
 import Settings from "./pages/dashboard/Settings.jsx";
+import Medicine from "./pages/dashboard/Medicine.jsx";
 import "./App.css";
 
 /**
@@ -62,6 +65,8 @@ export default function App() {
         <Route path="children" element={<Children />} />
         <Route path="attendance" element={<Attendance />} />
         <Route path="incidents" element={<Incidents />} />
+        <Route path="emergencies" element={<Emergencies />} />
+        <Route path="meetings" element={<Meetings />} />
         <Route path="daily-care" element={<DailyCare />} />
         <Route path="activities" element={<Activities />} />
         <Route path="admissions" element={<Admissions />} />
@@ -72,6 +77,7 @@ export default function App() {
         <Route path="reports" element={<Reports />} />
         <Route path="support" element={<Support />} />
         <Route path="centre-profile" element={<CentreProfile />} />
+        <Route path="medicine" element={<Medicine />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 

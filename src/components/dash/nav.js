@@ -15,7 +15,9 @@ export const navGroups = [
       { id: "children", label: "Children", icon: "baby", to: "/dashboard/children" },
       { id: "attendance", label: "Attendance", icon: "checkSquare", to: "/dashboard/attendance" },
       { id: "daily-care", label: "Daily Care", icon: "heart", to: "/dashboard/daily-care" },
+      { id: "medicine", label: "Medicine", icon: "heart", to: "/dashboard/medicine" },
       { id: "incidents", label: "Incidents", icon: "alertTriangle", to: "/dashboard/incidents" },
+      { id: "emergencies", label: "Emergencies", icon: "shield", to: "/dashboard/emergencies" },
       { id: "activities", label: "Activities", icon: "palette", to: "/dashboard/activities" },
     ],
   },
@@ -34,6 +36,7 @@ export const navGroups = [
     items: [
       { id: "announcements", label: "Announcements", icon: "megaphone", to: "/dashboard/announcements" },
       { id: "calendar", label: "Calendar", icon: "calendar", to: "/dashboard/calendar" },
+      { id: "meetings", label: "Meetings", icon: "message", to: "/dashboard/meetings" },
     ],
   },
   {

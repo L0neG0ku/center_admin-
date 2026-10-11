@@ -412,3 +412,78 @@ export const deleteEvent = (id) => del(`/daycares/me/events/${id}`);
 
 export const getEventRsvps = (id, options) =>
   get(`/daycares/me/events/${id}/rsvps`, options);
+
+/* Emergencies.
+
+   Separate from announcements, and not a styling choice. An alert has a
+   lifecycle: the all-clear is information families need as much as the alarm,
+   and a notice has nothing to send it with. The audience is resolved when it
+   is sent, so "14 of 31 answered" does not drift while the centre works down
+   the list.
+
+   Acknowledgement is a deliberate tap in the parent's app, not a read
+   receipt — which is what makes `outstanding` on the detail call a list worth
+   phoning. */
+
+export const listEmergencies = (params, options) =>
+  get(`/daycares/me/emergencies${query(params)}`, options);
+
+/* Who has answered, and who to phone. `outstanding` carries each family's
+   phone number because that is the next thing anyone does with the list. */
+export const getEmergency = (id, options) =>
+  get(`/daycares/me/emergencies/${id}`, options);
+
+export const raiseEmergency = (payload) =>
+  post("/daycares/me/emergencies", payload);
+
+/* The resolution text is required by the API. A family who received
+   "evacuate" and then a bare "resolved" is left guessing whether their child
+   is safe or the centre just closed the ticket. */
+export const resolveEmergency = (id, resolution) =>
+  post(`/daycares/me/emergencies/${id}/resolve`, { resolution });
+
+/* Meetings.
+
+   Role-agnostic routes: these same six serve a parent, a caretaker and an
+   owner, and the backend decides which side the caller is on. An owner's
+   scope is every child at the centre.
+
+   `awaiting` and `awaiting_me` are stored by the server, not derived. They
+   could be worked out from the status and who proposed last, but it would
+   have to be worked out identically in three clients, and the first one to
+   get it wrong shows a family "waiting for you" on a meeting the centre has
+   not answered. */
+
+export const listMeetings = (params, options) =>
+  get(`/meetings${query(params)}`, options);
+
+export const requestMeeting = (payload) => post("/meetings", payload);
+
+/* Only the side being waited on may confirm; confirming your own proposal is
+   409 NOT_YOUR_TURN, because it would turn a two-party agreement into a
+   one-party announcement. */
+export const confirmMeeting = (id) => post(`/meetings/${id}/confirm`);
+
+export const proposeMeetingTime = (id, payload) =>
+  post(`/meetings/${id}/propose`, payload);
+
+export const cancelMeeting = (id, reason) =>
+  post(`/meetings/${id}/cancel`, { reason });
+
+/* Centre-side only, and only once confirmed. The outcome is what the family
+   reads afterwards. */
+export const completeMeeting = (id, outcome) =>
+  post(`/meetings/${id}/complete`, { outcome });
+
+/* The medicine round.
+
+   A dose record cannot be deleted by anyone — no route exists, and there is
+   no soft-delete column. Same reason as incidents: a centre that can remove a
+   medication record can remove the evidence of a mistake. It can be corrected
+   for twelve hours, and `editable` on each row says whether that window is
+   still open.
+
+   Owners read; caretakers record, from the app. */
+
+export const listDoses = (params, options) =>
+  get(`/daycares/me/doses${query(params)}`, options);
