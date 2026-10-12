@@ -268,7 +268,7 @@ function MeetingRow({
   return (
     <div
       className="annrow"
-      style={needsMe ? { borderLeft: "3px solid var(--brand)" } : undefined}
+      style={needsMe ? { borderLeft: "3px solid var(--brand-600)" } : undefined}
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

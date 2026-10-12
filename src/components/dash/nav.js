@@ -21,6 +21,7 @@ export const navGroups = [
       { id: "emergencies", label: "Emergencies", icon: "shield", to: "/dashboard/emergencies" },
       { id: "activities", label: "Activities", icon: "palette", to: "/dashboard/activities" },
       { id: "observations", label: "Observations", icon: "bookOpen", to: "/dashboard/observations" },
+      { id: "badges", label: "Badges", icon: "sparkle", to: "/dashboard/badges" },
     ],
   },
   {

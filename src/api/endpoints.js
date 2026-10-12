@@ -527,3 +527,34 @@ export const listMealSlots = (options) =>
 
 export const putMealSlots = (slots) =>
   put("/daycares/me/meal-slots", { slots });
+
+/* Badges.
+
+   Moments the centre marks. The parent screen this replaced was a scoreboard
+   — 1,250 points, "level 3", the rank "Super Star" — and the rule here is
+   that no payload carries a number about a child. There is no points field
+   on a badge, and `tests/test_badges.py` asserts the absence of points,
+   score, level, rank, total, streak and the rest on every child-facing
+   response.
+
+   `times_awarded` on a badge is the one count, and it is about the centre's
+   own list: "is anyone using this one?". It never groups by child.
+
+   A badge children already have cannot be deleted — the awards reference it
+   with RESTRICT, so deleting it would empty their history. Retire it with
+   is_active instead. */
+
+export const listBadges = (options) => get("/daycares/me/badges", options);
+
+export const createBadge = (payload) => post("/daycares/me/badges", payload);
+
+export const updateBadge = (id, changed) =>
+  patch(`/daycares/me/badges/${id}`, changed);
+
+export const deleteBadge = (id) => del(`/daycares/me/badges/${id}`);
+
+export const listBadgeAwards = (params, options) =>
+  get(`/daycares/me/badge-awards${query(params)}`, options);
+
+export const removeBadgeAward = (id) =>
+  del(`/daycares/me/badge-awards/${id}`);
