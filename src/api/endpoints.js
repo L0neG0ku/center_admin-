@@ -558,3 +558,44 @@ export const listBadgeAwards = (params, options) =>
 
 export const removeBadgeAward = (id) =>
   del(`/daycares/me/badge-awards/${id}`);
+
+/* Activity planning.
+
+   Two things, deliberately separate. The LIBRARY is what the centre runs
+   often, written once. The PLAN is this room, this day, in this order.
+
+   A plan copies the library's wording when it is made, so editing the library
+   next month does not rewrite what a room was told to do last Tuesday. That
+   is the opposite of badges, where a rename should reach every badge already
+   given — a badge is a category, a planned activity is an instruction for one
+   day.
+
+   There is no "mark delivered" call. A caretaker records the activity the
+   normal way from the app, passing planned_activity_id, and that links the
+   two. Once delivered the plan is frozen. */
+
+export const listActivityTemplates = (options) =>
+  get("/daycares/me/activity-templates", options);
+
+export const createActivityTemplate = (payload) =>
+  post("/daycares/me/activity-templates", payload);
+
+export const updateActivityTemplate = (id, changed) =>
+  patch(`/daycares/me/activity-templates/${id}`, changed);
+
+export const deleteActivityTemplate = (id) =>
+  del(`/daycares/me/activity-templates/${id}`);
+
+/* The week. Pass from_date/to_date; the response carries the range back so
+   the planner can draw days with nothing on them. */
+export const getActivityPlan = (params, options) =>
+  get(`/daycares/me/activity-plan${query(params)}`, options);
+
+export const planActivity = (payload) =>
+  post("/daycares/me/activity-plan", payload);
+
+export const updatePlannedActivity = (id, changed) =>
+  patch(`/daycares/me/activity-plan/${id}`, changed);
+
+export const removePlannedActivity = (id) =>
+  del(`/daycares/me/activity-plan/${id}`);
