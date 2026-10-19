@@ -304,6 +304,12 @@
   color: var(--ink-700);
 }
 
+/* The same panel, but stacked. `.note-box` is a flex row built for an icon
+   beside a sentence, which flattens a form placed inside it onto one line. */
+.note-box--stack {
+  display: block;
+}
+
 .note-box--warn {
   background: var(--warning-soft);
   border-color: transparent;

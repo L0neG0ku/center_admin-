@@ -350,10 +350,17 @@ export default function Children() {
         <AddChildModal
           rooms={rooms}
           onClose={closeAdd}
-          onAdded={(name) => {
+          onAdded={(name, result) => {
             closeAdd();
             childrenCall.reload();
-            toast(`${name} enrolled — invite sent to the parent`);
+            // Say which actually happened. "They can sign in" is the
+            // normal case; an existing parent gaining a second child is
+            // not something to tell the family about.
+            toast(
+              result?.guardian_account_created
+                ? `${name} enrolled — the parent can sign in with their number`
+                : `${name} enrolled — invite sent to the parent`
+            );
           }}
         />
       ) : null}
@@ -442,9 +449,8 @@ function ChildDrawer({ childId, onClose, onChanged }) {
         <h3>Parents</h3>
         {guardians.length === 0 ? (
           <p className="note-box">
-            No parent has accepted yet. Until one does, this family sees
-            nothing in the Kribble app — no attendance, no photos, no daily
-            care.
+            Nobody is linked yet. Until someone is, this family sees nothing
+            in the Kribble app — no attendance, no photos, no daily care.
           </p>
         ) : (
           guardians.map((guardian) => (
@@ -469,6 +475,14 @@ function ChildDrawer({ childId, onClose, onChanged }) {
             />
           ))
         )}
+
+        <AddGuardianForm
+          childId={childId}
+          onAdded={(message) => {
+            call.reload();
+            onChanged(message);
+          }}
+        />
       </section>
 
       {invites.length > 0 ? (
@@ -488,6 +502,136 @@ function ChildDrawer({ childId, onClose, onChanged }) {
         </section>
       ) : null}
     </Drawer>
+  );
+}
+
+/**
+ * Add another parent to a child, creating their login.
+ *
+ * Collapsed until asked for: most children have one guardian, and a form
+ * sitting open on every drawer is an invitation to add a second person by
+ * accident.
+ *
+ * The same number twice is refused by the API, and a number belonging to a
+ * staff account is refused too — both come back as a readable message rather
+ * than being caught here, because the server is the only place that knows.
+ */
+function AddGuardianForm({ childId, onAdded }) {
+  const [open, setOpen] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [relation, setRelation] = useState("FATHER");
+  const [localError, setLocalError] = useState(null);
+
+  const add = useAction(() =>
+    api.addGuardian(childId, {
+      full_name: fullName.trim(),
+      phone: phone.trim(),
+      relation,
+    })
+  );
+
+  const reset = () => {
+    setOpen(false);
+    setFullName("");
+    setPhone("");
+    setRelation("FATHER");
+    setLocalError(null);
+  };
+
+  const submit = () => {
+    setLocalError(null);
+    if (!fullName.trim()) return setLocalError("Enter their name.");
+    if (phone.replace(/\D/g, "").length < 10) {
+      return setLocalError("Enter a 10-digit mobile — it is how they sign in.");
+    }
+    return add
+      .run()
+      .then((result) => {
+        const name = fullName.trim();
+        reset();
+        // An existing parent gaining another child is not news for the
+        // family; a new login is.
+        onAdded(
+          result?.account_created
+            ? `${name} added — they can sign in with their number`
+            : `${name} added to this child`
+        );
+      })
+      .catch(() => {});
+  };
+
+  if (!open) {
+    return (
+      <Btn
+        variant="outline"
+        icon="userPlus"
+        onClick={() => setOpen(true)}
+        style={{ marginTop: 12 }}
+      >
+        Add another parent
+      </Btn>
+    );
+  }
+
+  const error = localError || add.error?.message;
+  const fieldErrors = add.error?.fields || {};
+
+  return (
+    <div className="note-box note-box--stack" style={{ marginTop: 12 }}>
+      <div className="dfield-2">
+        <label className="dfield">
+          <span>Full name</span>
+          <input
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            placeholder="e.g. Rohit Shah"
+          />
+          {fieldErrors.full_name ? (
+            <small className="dfield__error">{fieldErrors.full_name}</small>
+          ) : null}
+        </label>
+        <label className="dfield">
+          <span>Mobile</span>
+          <input
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            placeholder="+91 98765 43210"
+            inputMode="tel"
+          />
+          {fieldErrors.phone ? (
+            <small className="dfield__error">{fieldErrors.phone}</small>
+          ) : null}
+        </label>
+      </div>
+
+      <label className="dfield" style={{ marginTop: 12 }}>
+        <span>Relation</span>
+        <select
+          value={relation}
+          onChange={(event) => setRelation(event.target.value)}
+        >
+          <option value="MOTHER">Mother</option>
+          <option value="FATHER">Father</option>
+          <option value="GUARDIAN">Guardian</option>
+        </select>
+      </label>
+
+      {error ? (
+        <p className="dfield__error" style={{ marginTop: 12 }}>
+          {error}
+        </p>
+      ) : null}
+
+      <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+        <Btn icon="check" disabled={add.busy} onClick={submit}>
+          {add.busy ? "Adding..." : "Add parent"}
+        </Btn>
+        <Btn variant="outline" onClick={reset}>
+          Cancel
+        </Btn>
+      </div>
+    </div>
   );
 }
 
@@ -551,7 +695,9 @@ function AddChildModal({ rooms, onClose, onAdded }) {
   const [gender, setGender] = useState("");
   const [classroomId, setClassroomId] = useState("");
   const [feePlan, setFeePlan] = useState("");
+  const [guardianName, setGuardianName] = useState("");
   const [guardianPhone, setGuardianPhone] = useState("");
+  const [guardianEmail, setGuardianEmail] = useState("");
   const [relation, setRelation] = useState("MOTHER");
   const [localError, setLocalError] = useState(null);
 
@@ -562,7 +708,16 @@ function AddChildModal({ rooms, onClose, onAdded }) {
       gender,
       classroom_id: classroomId,
       fee_plan: feePlan.trim(),
-      primary_guardian: { phone: guardianPhone.trim(), relation },
+      primary_guardian: {
+        phone: guardianPhone.trim(),
+        relation,
+        // Sending a name is what makes the API create the parent's login
+        // rather than raise an invite nobody can accept.
+        full_name: guardianName.trim(),
+        // Optional, and left out entirely when blank: an empty string would
+        // fail email validation on the way in.
+        ...(guardianEmail.trim() ? { email: guardianEmail.trim() } : {}),
+      },
     })
   );
 
@@ -573,14 +728,15 @@ function AddChildModal({ rooms, onClose, onAdded }) {
     if (!gender) return setLocalError("Choose a gender.");
     if (!classroomId) return setLocalError("Choose a classroom.");
     if (!feePlan.trim()) return setLocalError("Enter a fee plan.");
+    if (!guardianName.trim()) return setLocalError("Enter the parent's name.");
     if (guardianPhone.replace(/\D/g, "").length < 10) {
       return setLocalError(
-        "Enter the parent's 10-digit mobile — the invite is matched on it."
+        "Enter the parent's 10-digit mobile — it is how they sign in."
       );
     }
     return create
       .run()
-      .then(() => onAdded(name.trim()))
+      .then((result) => onAdded(name.trim(), result))
       .catch(() => {});
   };
 
@@ -590,7 +746,7 @@ function AddChildModal({ rooms, onClose, onAdded }) {
   return (
     <Modal
       title="Add a child"
-      sub="Enrolling a child also invites their parent."
+      sub="This also creates the parent's login, so they can sign in straight away."
       onClose={onClose}
       size="lg"
       footer={
@@ -599,7 +755,7 @@ function AddChildModal({ rooms, onClose, onAdded }) {
             Cancel
           </Btn>
           <Btn icon="check" disabled={create.busy} onClick={submit}>
-            {create.busy ? "Enrolling..." : "Enrol & invite"}
+            {create.busy ? "Enrolling..." : "Enrol & create parent login"}
           </Btn>
         </>
       }
@@ -679,20 +835,51 @@ function AddChildModal({ rooms, onClose, onAdded }) {
         </label>
       </div>
 
+      <div className="dfield-2" style={{ marginTop: 14 }}>
+        <label className="dfield">
+          <span>Parent's full name</span>
+          <input
+            value={guardianName}
+            onChange={(event) => setGuardianName(event.target.value)}
+            placeholder="e.g. Meera Shah"
+          />
+          {fieldErrors.full_name ? (
+            <small className="dfield__error">{fieldErrors.full_name}</small>
+          ) : null}
+        </label>
+        <label className="dfield">
+          <span>Parent's mobile — this is how they sign in</span>
+          <input
+            value={guardianPhone}
+            onChange={(event) => setGuardianPhone(event.target.value)}
+            placeholder="+91 98765 43210"
+            inputMode="tel"
+          />
+          {fieldErrors.primary_guardian || fieldErrors.phone ? (
+            <small className="dfield__error">
+              {fieldErrors.primary_guardian || fieldErrors.phone}
+            </small>
+          ) : null}
+        </label>
+      </div>
+
       <label className="dfield" style={{ marginTop: 14 }}>
-        <span>Parent's mobile — the invite goes to this number</span>
+        <span>Parent's email (optional)</span>
         <input
-          value={guardianPhone}
-          onChange={(event) => setGuardianPhone(event.target.value)}
-          placeholder="+91 98765 43210"
-          inputMode="tel"
+          value={guardianEmail}
+          onChange={(event) => setGuardianEmail(event.target.value)}
+          placeholder="meera@example.com"
+          inputMode="email"
         />
-        {fieldErrors.primary_guardian || fieldErrors.phone ? (
-          <small className="dfield__error">
-            {fieldErrors.primary_guardian || fieldErrors.phone}
-          </small>
+        {fieldErrors.email ? (
+          <small className="dfield__error">{fieldErrors.email}</small>
         ) : null}
       </label>
+
+      <p className="dmuted" style={{ marginTop: 14 }}>
+        No password is set. The parent signs in with this number and a
+        one-time code, so double-check the digits — it is the only way in.
+      </p>
 
       {error ? (
         <p className="dfield__error" style={{ marginTop: 14 }}>

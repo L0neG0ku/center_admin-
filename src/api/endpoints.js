@@ -262,14 +262,35 @@ export const getChild = (id, options) =>
   get(`/daycares/me/children/${encodeURIComponent(id)}`, options);
 
 /**
- * Creating a child also creates the guardian invite — `primary_guardian` is
- * required, and the 201 comes back as `{ child, enrollment, invite }` rather
- * than a bare child.
+ * Creating a child also sets up the parent. `primary_guardian` is required,
+ * and the 201 comes back as `{ child, enrollment, invite, ... }` rather than
+ * a bare child.
+ *
+ * Which of two things happens depends on `primary_guardian.full_name`:
+ *
+ *  - **Given** — the parent's login is created there and then. They sign in
+ *    with their number and a one-time code; nothing to accept. The response
+ *    says `guardian_account_created: true`.
+ *  - **Omitted** — an invite is raised instead, and the parent has to sign
+ *    themselves up before they see anything.
+ *
+ * The console always sends the name. The other path is kept because the API
+ * still supports it, not because anything here uses it.
  */
 export const createChild = (payload) => post("/daycares/me/children", payload);
 
 export const updateChild = (id, changed) =>
   patch(`/daycares/me/children/${encodeURIComponent(id)}`, changed);
+
+/**
+ * Add a second parent, creating their login if they do not have one.
+ *
+ * `account_created` in the response is false when an existing parent was
+ * simply added to another child — the normal case for a sibling, where one
+ * login carries both children.
+ */
+export const addGuardian = (childId, payload) =>
+  post(`/daycares/me/children/${encodeURIComponent(childId)}/guardians`, payload);
 
 export const inviteGuardian = (childId, payload) =>
   post(`/daycares/me/children/${encodeURIComponent(childId)}/invites`, payload);
