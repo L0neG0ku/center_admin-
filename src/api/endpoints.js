@@ -306,6 +306,42 @@ export const revokeGuardianInvite = (childId, inviteId) =>
     `/daycares/me/children/${encodeURIComponent(childId)}/invites/${encodeURIComponent(inviteId)}`
   );
 
+
+/* Fees. A plan is what a place costs; an invoice is one month of it for one
+   child. The two are deliberately separate — changing a plan next term must
+   not rewrite what a family was already billed, so an invoice carries its own
+   amount_paise copied from the plan at the moment it was raised. */
+
+export const listFeePlans = (options) =>
+  get("/daycares/me/fee-plans", options);
+
+export const createFeePlan = (payload) =>
+  post("/daycares/me/fee-plans", payload);
+
+/** Only name, amount and is_active. A plan's cycle cannot change — a monthly
+ *  plan that became a term plan would make every invoice already raised from
+ *  it mean something different. Retire it and make a new one. */
+export const updateFeePlan = (id, changed) =>
+  patch(`/daycares/me/fee-plans/${encodeURIComponent(id)}`, changed);
+
+/** Paginated, and filterable by status and child. */
+export const listInvoices = (params, options) =>
+  get(`/daycares/me/invoices${query(params)}`, options);
+
+/** Raises a DRAFT. The family sees nothing until it is sent. */
+export const createInvoice = (payload) =>
+  post("/daycares/me/invoices", payload);
+
+/** DRAFT -> SENT. This is the step that makes it visible to the parent and
+ *  payable; until it happens the invoice is the centre's own working note. */
+export const sendInvoice = (id) =>
+  post(`/daycares/me/invoices/${encodeURIComponent(id)}/send`, {});
+
+/** Cancels it, with a reason that is kept. There is no delete: an invoice a
+ *  family may already have seen is a record, not a draft message. */
+export const voidInvoice = (id, reason) =>
+  post(`/daycares/me/invoices/${encodeURIComponent(id)}/void`, { reason });
+
 /* Attendance. The register for a date, plus totals over a range. */
 
 export const getAttendance = (params, options) =>
