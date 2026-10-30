@@ -20,6 +20,7 @@ import Activities from "./pages/dashboard/Activities.jsx";
 import Staff from "./pages/dashboard/Staff.jsx";
 import Admissions from "./pages/dashboard/Admissions.jsx";
 import Billing from "./pages/dashboard/Billing.jsx";
+import Messages from "./pages/dashboard/Messages.jsx";
 import Announcements from "./pages/dashboard/Announcements.jsx";
 import CalendarPage from "./pages/dashboard/CalendarPage.jsx";
 import Reports from "./pages/dashboard/Reports.jsx";
@@ -75,6 +76,7 @@ export default function App() {
         <Route path="admissions" element={<Admissions />} />
         <Route path="staff" element={<Staff />} />
         <Route path="billing" element={<Billing />} />
+        <Route path="messages" element={<Messages />} />
         <Route path="announcements" element={<Announcements />} />
         <Route path="calendar" element={<CalendarPage />} />
         <Route path="reports" element={<Reports />} />

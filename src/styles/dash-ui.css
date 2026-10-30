@@ -1602,3 +1602,238 @@
     flex-wrap: wrap;
   }
 }
+
+/* --- Messages: a conversation list beside one open thread ---------------- */
+
+.msg {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) 1fr;
+  gap: 16px;
+  /* The pane scrolls, not the page. A conversation that pushed the whole
+     dashboard down would move the composer off screen as it filled. */
+  height: calc(100vh - 210px);
+  min-height: 420px;
+}
+
+.msg__list,
+.msg__pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.msg__list .panel__body,
+.msg__pane .panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.msg__muted {
+  padding: 24px 20px;
+  color: var(--ink-400);
+  font-size: 14px;
+}
+
+.msg__threads {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.msg__thread {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+}
+
+.msg__thread:hover { background: var(--surface-soft); }
+.msg__thread.is-active { background: var(--lavender); }
+
+.msg__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: transparent;
+  flex: 0 0 auto;
+}
+
+.msg__dot.is-unread { background: var(--brand-600); }
+
+.msg__threadText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.msg__name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg__name.is-unread { font-weight: 700; }
+
+.msg__meta {
+  font-size: 12px;
+  color: var(--ink-400);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg__badge {
+  flex: 0 0 auto;
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--brand-600);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.msg__conv {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.msg__convHead {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.msg__convHead h3 { margin: 0; font-size: 16px; font-weight: 700; }
+.msg__convHead p { margin: 2px 0 0; font-size: 12px; color: var(--ink-400); }
+
+.msg__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.msg__older { display: flex; justify-content: center; margin-bottom: 12px; }
+
+.msg__bubbles { list-style: none; margin: 0; padding: 0; }
+
+.msg__day {
+  margin: 14px 0 10px;
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+}
+
+.msg__bubbleRow { display: flex; justify-content: flex-start; }
+.msg__bubbleRow.is-mine { justify-content: flex-end; }
+
+.msg__bubble {
+  max-width: min(460px, 78%);
+  padding: 9px 13px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-900);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg__bubble.is-mine {
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+  color: #fff;
+  border-radius: 14px 14px 4px 14px;
+}
+
+/* A message in flight must not look like one that arrived. Showing them
+   identically is how someone comes to believe they told a parent
+   something they did not. */
+.msg__bubble.is-pending { opacity: 0.6; font-style: italic; }
+
+.msg__stamp {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 3px 0 10px;
+  font-size: 11px;
+  color: var(--ink-400);
+}
+
+.msg__stamp.is-mine { justify-content: flex-end; }
+.msg__failed { color: var(--danger); font-weight: 600; }
+
+.msg__retry {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--brand-600);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.msg__composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+}
+
+.msg__composer textarea {
+  flex: 1;
+  resize: none;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink-900);
+}
+
+.msg__composer textarea:focus {
+  outline: none;
+  border-color: var(--brand-600);
+  background: var(--surface);
+}
+
+.msg__readonly {
+  margin: 0;
+  padding: 14px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-soft);
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-600);
+}
+
+@media (max-width: 900px) {
+  .msg {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+  .msg__list { max-height: 320px; }
+  .msg__pane { min-height: 480px; }
+}

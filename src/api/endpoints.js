@@ -659,3 +659,39 @@ export const updatePlannedActivity = (id, changed) =>
 
 export const removePlannedActivity = (id) =>
   del(`/daycares/me/activity-plan/${id}`);
+
+/* ---------- Messaging ----------
+
+   One conversation per child, shared by both guardians. Scope is the
+   backend's: an owner sees their whole centre, so nothing here passes a
+   classroom or a centre id.
+
+   Every route 404s when CHAT_ENABLED is false on the deployment, which the
+   page turns into "not switched on yet" rather than an error — a centre
+   told "no conversations" when the feature is off would wait for a reply
+   that cannot come. */
+
+export const listThreads = (params, options) =>
+  get(`/messages/threads${query({ per_page: 50, ...params })}`, options);
+
+/** `before` is an opaque cursor from the previous page's meta. It is signed
+ *  per actor and per thread, so it is passed back verbatim and never built
+ *  here. */
+export const getThreadHistory = (id, params, options) =>
+  get(
+    `/messages/threads/${encodeURIComponent(id)}${query({ limit: 50, ...params })}`,
+    options
+  );
+
+/** `client_id` is minted by the caller and REUSED on retry — a fresh one
+ *  would post the message twice. The backend answers a replay with 200 and
+ *  the original message instead of creating another. */
+export const sendMessage = (id, payload) =>
+  post(`/messages/threads/${encodeURIComponent(id)}/messages`, payload);
+
+/** Acknowledges everything up to this message for THIS user. Idempotent
+ *  without a client id: acknowledging twice is acknowledging once. */
+export const markThreadRead = (id, lastMessageId) =>
+  post(`/messages/threads/${encodeURIComponent(id)}/read`, {
+    last_message_id: lastMessageId,
+  });

@@ -37,9 +37,10 @@ export const navGroups = [
     id: "comms",
     label: "Communication",
     items: [
+      { id: "messages", label: "Messages", icon: "message", to: "/dashboard/messages" },
       { id: "announcements", label: "Announcements", icon: "megaphone", to: "/dashboard/announcements" },
       { id: "calendar", label: "Calendar", icon: "calendar", to: "/dashboard/calendar" },
-      { id: "meetings", label: "Meetings", icon: "message", to: "/dashboard/meetings" },
+      { id: "meetings", label: "Meetings", icon: "clock", to: "/dashboard/meetings" },
     ],
   },
   {
