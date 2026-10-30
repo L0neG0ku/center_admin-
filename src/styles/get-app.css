@@ -1,0 +1,165 @@
+/* The page a parent opens on a phone, from a WhatsApp link. Phone-first:
+   the desktop case is a centre checking the link works. */
+
+.getapp {
+  min-height: 100vh;
+  background: var(--lavender);
+  padding: 24px 16px 48px;
+  display: flex;
+  justify-content: center;
+}
+
+.getapp__card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-card);
+  padding: 28px 22px 24px;
+}
+
+.getapp__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--ink-900);
+}
+
+.getapp__mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-md);
+  background: var(--brand-600);
+  color: #fff;
+}
+
+.getapp h1 {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  line-height: 1.22;
+  color: var(--ink-900);
+}
+
+.getapp__lede {
+  margin: 0 0 22px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink-600);
+}
+
+/* Full width and thumb-height: this is tapped on a phone, one-handed,
+   usually while doing something else. */
+.getapp__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--brand-600);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-cta);
+}
+
+.getapp__cta:active { background: var(--brand-700); }
+
+.getapp__meta {
+  margin: 10px 0 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--ink-400);
+}
+
+.getapp__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-600);
+}
+
+.getapp__note--warn {
+  background: var(--warning-soft);
+  border-color: var(--warning);
+  color: var(--ink-700);
+}
+
+.getapp__steps,
+.getapp__help {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.getapp h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink-900);
+}
+
+/* The global reset strips list markers everywhere, which is right for nav
+   and wrong here: these are steps in an order, and "do this, then this" is
+   most of what the page is for. */
+.getapp__steps ol {
+  margin: 0;
+  padding-left: 22px;
+  list-style: decimal;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.getapp__steps li::marker {
+  color: var(--brand-600);
+  font-weight: 700;
+}
+
+.getapp__steps li {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--ink-600);
+}
+
+.getapp__steps strong { color: var(--ink-900); }
+
+.getapp__help p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink-600);
+}
+
+.getapp__help strong { color: var(--ink-900); }
+
+.getapp__foot {
+  margin: 26px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-400);
+}
+
+@media (min-width: 640px) {
+  .getapp { padding-top: 56px; }
+  .getapp__card { padding: 36px 34px 30px; }
+  .getapp h1 { font-size: 30px; }
+}

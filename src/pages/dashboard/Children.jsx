@@ -60,6 +60,24 @@ const dateLabel = (iso) =>
       })
     : "—";
 
+/**
+ * How long since a parent last opened the app.
+ *
+ * Coarse on purpose. A centre is asking "are they using it" and acts on the
+ * answer by picking up the phone — "3 weeks ago" is a prompt, "21 days ago"
+ * is a measurement nobody needs.
+ */
+function lastSeenLabel(iso) {
+  const when = new Date(iso);
+  const days = Math.floor((Date.now() - when.getTime()) / 86400000);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  if (days < 14) return "Last week";
+  if (days < 60) return `${Math.floor(days / 7)} weeks ago`;
+  return dateLabel(iso);
+}
+
 /** Age the way a parent says it: months under two, then years. */
 function ageLabel(dob) {
   if (!dob) return "";
@@ -92,6 +110,7 @@ function toRow(child) {
     startDate: enrollment?.start_date || null,
     guardianCount: child.guardian_count ?? 0,
     pendingInvites: child.pending_invite_count ?? 0,
+    appLastSeen: child.app_last_seen_at || null,
   };
 }
 
@@ -190,6 +209,23 @@ export default function Children() {
         </span>
       ),
     },
+    {
+      key: "app",
+      header: "App",
+      render: (child) =>
+        // Only asked once a parent exists. "Not signed in" against a child
+        // with nobody linked would read as the family ignoring the app, when
+        // nobody has been given it.
+        child.guardianCount === 0 ? (
+          <span className="muted">—</span>
+        ) : child.appLastSeen ? (
+          <span className="nowrap">{lastSeenLabel(child.appLastSeen)}</span>
+        ) : (
+          <Tag tone="amber" dot>
+            Not signed in
+          </Tag>
+        ),
+    },
     { key: "feePlan", header: "Fee plan", render: (child) => child.feePlan || "—" },
     {
       key: "startDate",
@@ -208,6 +244,12 @@ export default function Children() {
   ];
 
   const noParent = all.filter((child) => child.guardianCount === 0).length;
+  // Families who have a login and have never used it. The number a centre
+  // needs during a pilot: these are the people to ring, and nothing else on
+  // this page would tell them.
+  const notSignedIn = all.filter(
+    (child) => child.guardianCount > 0 && !child.appLastSeen
+  ).length;
 
   if (childrenCall.error) {
     return (
@@ -264,6 +306,12 @@ export default function Children() {
           label="No parent linked"
           value={noParent}
         />
+        <StatCard
+          icon="phone"
+          tone={notSignedIn > 0 ? "amber" : "grey"}
+          label="Not on the app"
+          value={notSignedIn}
+        />
       </div>
 
       {noParent > 0 ? (
@@ -272,6 +320,17 @@ export default function Children() {
           {noParent === 1 ? "One child has" : `${noParent} children have`} no
           parent linked yet — their family cannot see anything the centre
           logs until an invite is accepted.
+        </p>
+      ) : null}
+
+      {notSignedIn > 0 ? (
+        <p className="note-box" style={{ marginBottom: 16 }}>
+          <Icon name="phone" size={15} />{" "}
+          {notSignedIn === 1
+            ? "One family has an account but has never signed in"
+            : `${notSignedIn} families have accounts but have never signed in`}
+          . They will not see anything you log until they open the app — a
+          phone call is usually all it takes.
         </p>
       ) : null}
 

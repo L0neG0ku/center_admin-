@@ -21,6 +21,7 @@ import Staff from "./pages/dashboard/Staff.jsx";
 import Admissions from "./pages/dashboard/Admissions.jsx";
 import Billing from "./pages/dashboard/Billing.jsx";
 import Messages from "./pages/dashboard/Messages.jsx";
+import GetApp from "./pages/GetApp.jsx";
 import Announcements from "./pages/dashboard/Announcements.jsx";
 import CalendarPage from "./pages/dashboard/CalendarPage.jsx";
 import Reports from "./pages/dashboard/Reports.jsx";
@@ -44,6 +45,10 @@ export default function App() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/login" element={<Login />} />
       <Route path="/activate" element={<Activate />} />
+
+      {/* Public: the link a centre sends families. The parent has not
+          signed in - that is why they are here. */}
+      <Route path="/app" element={<GetApp />} />
 
       {/* Where an owner lands after signing in: verified, in the queue, or
           asked for changes. Gated so a signed-out visitor cannot see it. */}
