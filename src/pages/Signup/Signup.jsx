@@ -382,17 +382,13 @@ export default function Signup() {
         }
         setOtp({ sent: true, code: "", error: undefined, sending: true });
         try {
-          const result = await backend.sendOtp(phone);
-          // Local and staging return the code so testers don't need an SMS.
-          // Production sends null, which leaves the field empty. Either way
-          // it stays editable and is still checked by /auth/otp/verify — this
-          // only saves typing, it never stands in for verification.
-          const debugCode = result?.debug_code ?? result?.debugCode ?? null;
+          await backend.sendOtp(phone);
+          // debug_code is deliberately ignored. It was here so testers did
+          // not need an SMS; MSG91 now sends one, and prefilling the field
+          // would hide the single thing worth checking — that it arrived.
           setOtp((current) => ({
             ...current,
             sending: false,
-            code: debugCode ? String(debugCode) : current.code,
-            prefilled: Boolean(debugCode),
           }));
         } catch (error) {
           setOtp({

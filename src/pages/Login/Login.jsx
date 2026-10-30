@@ -25,7 +25,6 @@ export default function Login() {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
-  const [prefilled, setPrefilled] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,12 +52,12 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const result = await sendLoginOtp(phone.trim());
-      // Filled in on local/staging only; null in production leaves it blank.
-      const debugCode = result?.debug_code ?? result?.debugCode ?? null;
+      await sendLoginOtp(phone.trim());
+      // Deliberately NOT reading debug_code. Staging still returns it, and
+      // filling the field from it meant nobody ever found out whether the
+      // SMS arrived — which is the only part of this that can break now
+      // that MSG91 is live. The owner reads their phone, like a centre will.
       setCodeSent(true);
-      setPrefilled(Boolean(debugCode));
-      if (debugCode) setCode(String(debugCode));
     } catch (error) {
       setNotice(error?.message || "Couldn't send the code. Please try again.");
     } finally {
@@ -207,11 +206,7 @@ export default function Login() {
                   value={code}
                   onChange={setCode}
                   error={errors.code}
-                  hint={
-                    prefilled
-                      ? "Test code filled in for you — edit it if you want."
-                      : "Enter the code we texted you."
-                  }
+                  hint="Enter the code we texted you."
                 />
               ) : null}
             </div>

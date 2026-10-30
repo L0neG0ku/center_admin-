@@ -204,11 +204,7 @@ export default function StepCentre({
                 value={otp.code}
                 onChange={onOtp.setCode}
                 error={otp.error}
-                hint={
-                  otp.prefilled
-                    ? "Test code filled in for you — edit it if you want."
-                    : "Enter the code we texted you."
-                }
+                hint="Enter the code we texted you."
               />
               <Button variant="outline" onClick={onOtp.verify}>
                 Verify

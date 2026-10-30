@@ -37,7 +37,10 @@ export const OTP_PURPOSE_LOGIN = "LOGIN";
 
 /**
  * Sends a phone-verification code during signup.
- * The response may carry `debug_code` on local/staging; it is null in prod.
+ *
+ * The response may still carry `debug_code` on local and staging, and this
+ * app deliberately ignores it. MSG91 delivers a real SMS now, and filling
+ * the field from the response would hide the only part that can fail.
  */
 export const sendOtp = (phone) =>
   post(
