@@ -20,6 +20,7 @@ import DataTable from "../../components/dash/DataTable.jsx";
 import { Drawer, Modal } from "../../components/dash/Overlay.jsx";
 import { useToast } from "../../components/dash/Toast.jsx";
 import * as api from "../../api/endpoints.js";
+import { uploadToStorage } from "../../api/uploads.js";
 import { useAction, useResource } from "../../api/useResource.js";
 
 /**
@@ -470,7 +471,7 @@ function ChildDrawer({ childId, onClose, onChanged }) {
       wide
     >
       <div className="dident">
-        <Avatar name={child.name} size={48} src={child.photo_url} />
+        <ChildPhoto child={child} onChanged={() => { call.reload(); onChanged?.(); }} />
         <div className="dident__text">
           <strong>{child.name}</strong>
           <span>
@@ -953,5 +954,70 @@ function AddChildModal({ rooms, onClose, onAdded }) {
         consent.
       </p>
     </Modal>
+  );
+}
+
+/**
+ * The child's photo, and the only way to set one.
+ *
+ * It is a face, not decoration: it is what a caretaker checks a child
+ * against at pickup, and what a parent sees at the top of their own app.
+ *
+ * Upload then PATCH, in that order. `photo_key` on the child is validated
+ * server-side to sit under this centre's own prefix, so the key has to come
+ * from a presign and cannot be typed. The child is only updated once the
+ * bytes are actually in storage — the reverse order would point a child at
+ * a photo that is not there.
+ */
+function ChildPhoto({ child, onChanged }) {
+  const toast = useToast();
+  const [busy, setBusy] = useState(false);
+
+  const choose = async (event) => {
+    const file = event.target.files?.[0];
+    // Let the same file be chosen again after a failure.
+    event.target.value = "";
+    if (!file) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast("Photos must be JPEG, PNG or WebP.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast("That photo is over 10MB. Please choose a smaller one.");
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const fileKey = await uploadToStorage({ file, purpose: "photo" });
+      await api.updateChild(child.id, { photo_key: fileKey });
+      toast("Photo updated.");
+      onChanged?.();
+    } catch (error) {
+      toast(error?.message || "Could not upload that photo.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <label
+      className="childphoto"
+      title={busy ? "Uploading..." : "Change photo"}
+      aria-busy={busy || undefined}
+    >
+      <Avatar name={child.name} size={48} src={child.photo_url} />
+      <span className="childphoto__badge">
+        <Icon name={busy ? "clock" : "camera"} size={12} />
+      </span>
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={choose}
+        disabled={busy}
+        hidden
+      />
+    </label>
   );
 }

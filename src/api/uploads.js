@@ -62,6 +62,40 @@ function putFile(url, file, { onProgress, signal, headers = {} } = {}) {
 }
 
 /**
+ * Presign → PUT, and nothing after it.
+ *
+ * Returns the storage `file_key` for a caller that attaches the object to
+ * something it already owns — a child's photo, for instance, which belongs
+ * on the child rather than in the centre's photo gallery. `uploadFile`
+ * below adds a third step that CREATES a centre record, which is wrong for
+ * those: it would file a child's face as a gallery photo of the nursery.
+ */
+export async function uploadToStorage({ file, purpose = "photo", onProgress, signal }) {
+  const mimeType = file.type || "application/octet-stream";
+
+  const presigned = await presignUpload({
+    purpose,
+    filename: file.name,
+    contentType: mimeType,
+    size: file.size,
+  });
+
+  const uploadUrl = presigned?.upload_url;
+  const fileKey = presigned?.file_key;
+  if (!uploadUrl || !fileKey) {
+    throw new ApiError("Couldn't start the upload. Please try again.", { status: 502 });
+  }
+
+  await putFile(uploadUrl, file, {
+    onProgress,
+    signal,
+    headers: presigned.required_headers || {},
+  });
+
+  return fileKey;
+}
+
+/**
  * The full presign → PUT → record round trip.
  *
  * `purpose` is "document" or "photo". `meta` carries whatever the record step

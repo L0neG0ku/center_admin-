@@ -1837,3 +1837,38 @@
   .msg__list { max-height: 320px; }
   .msg__pane { min-height: 480px; }
 }
+
+/* --- Child photo picker -------------------------------------------------
+   The avatar in the child drawer doubles as the upload control. A separate
+   "Change photo" button would be the obvious alternative and the wrong one:
+   the thing being changed is right there, and a caretaker looking for it
+   taps the face. */
+.childphoto {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  border-radius: 999px;
+}
+.childphoto[aria-busy="true"] {
+  cursor: progress;
+  opacity: 0.6;
+}
+.childphoto__badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 999px;
+  background: var(--brand, #7c5cff);
+  color: #fff;
+  /* Against a photo of any colour, the ring is what keeps the badge
+     readable rather than dissolving into the picture behind it. */
+  box-shadow: 0 0 0 2px var(--surface, #fff);
+}
+.childphoto:focus-within .childphoto__badge {
+  outline: 2px solid var(--brand, #7c5cff);
+  outline-offset: 2px;
+}
